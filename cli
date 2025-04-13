@@ -1,0 +1,18 @@
+#!usr/bin/php
+<?php
+
+declare(strict_types=1);
+
+require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/App/Config/Constants.php';
+$dir = __DIR__ . '/System/Helpers';
+foreach (scandir($dir) as $file) {
+   if (is_file($dir . '/' . $file) && !str_starts_with($file, '_') && str_ends_with($file, '.php')) {
+      require_once $dir . '/' . $file;
+   }
+}
+
+$params = array_slice($argv, 1);
+$cli = new System\Cli\Cli();
+
+print($cli->run($params));

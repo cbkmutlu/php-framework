@@ -1,0 +1,24 @@
+<IfModule mod_rewrite.c>
+   <IfModule mod_negotiation.c>
+      Options -MultiViews
+   </IfModule>
+
+   RewriteCond %{HTTP:Authorization} ^(.*)
+   RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
+
+   RewriteEngine On
+
+   RewriteCond %{REQUEST_FILENAME} !-d
+   RewriteRule ^(.*)/$ /$1 [L,R=301]
+
+   RewriteCond %{REQUEST_FILENAME} !-d
+   RewriteCond %{REQUEST_FILENAME} !-f
+   RewriteRule ^(.+)$ index.php [QSA,L]
+</IfModule>
+
+<FilesMatch "^swagger">
+    AuthType Basic
+    AuthName "Swagger Restricted Access"
+    AuthUserFile "C:/Wamp.NET/sites/backend.local/Public/swagger/.htpasswd"
+    Require valid-user
+</FilesMatch>
