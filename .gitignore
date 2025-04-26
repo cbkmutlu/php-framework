@@ -1,0 +1,5 @@
+*.log
+*.local
+*.lock
+
+vendor

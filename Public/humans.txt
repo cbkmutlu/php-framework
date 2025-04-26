@@ -1,0 +1,13 @@
+/* TEAM */
+   Author: Mutlu Türkmen
+   Github: https://github.com/cbkmutlu
+
+/* SITE */
+   Last update: 25.04.2025
+   Language: Turkish
+   Doctype: HTML5
+   IDE: vscode
+
+/* THANKS */
+   Github: https://github.com/tkaratug
+   Github: https://github.com/xkaramizah
