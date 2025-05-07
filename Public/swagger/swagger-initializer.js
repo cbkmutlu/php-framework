@@ -7,13 +7,14 @@ window.onload = function () {
       "urls.primaryName": "Backend",
       syntaxHighlight: { activated: false },
       dom_id: "#swagger-ui",
-      docExpansion: "none",
+      docExpansion: "list",
       deepLinking: true,
       validatorUrl: null,
       presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
       plugins: [SwaggerUIBundle.plugins.DownloadUrl],
       layout: "StandaloneLayout",
       // operationsSorter: "method",
+      // operationsSorter: "alpha",
       operationsSorter: function (a, b) {
          const order = {
             get: "0",
