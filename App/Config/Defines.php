@@ -3,6 +3,15 @@
 declare(strict_types=1);
 
 return [
+   'app' => [
+      'env'     => '.env.local',
+      'routes'  => ['Config/Routes'],
+      'swagger' => [
+         // php cli hash 1234
+         'user' => '$argon2id$v=19$m=65536,t=4,p=1$QkFYZS5vLjMyclN0cVJNSA$tqbN14XVvOCV6/zry2tOTpnDpAJNrMLOoE+F4oRprxw',
+      ]
+   ],
+
    'language' => [
       'default' => 'tr_TR',
       'locales' => [
@@ -33,10 +42,12 @@ return [
       'prepares'    => false,
       'error_mode'  => PDO::ERRMODE_EXCEPTION,
       'fetch_mode'  => PDO::FETCH_OBJ,
+      'update_rows' => true,
       'connections' => [
          'primary' => [
             'db_driver'    => 'mysql',
             'db_host'      => getenv('DB_HOST'),
+            'db_port'      => getenv('DB_PORT'),
             'db_user'      => getenv('DB_USER'),
             'db_pass'      => getenv('DB_PASS'),
             'db_name'      => getenv('DB_NAME'),
@@ -46,10 +57,11 @@ return [
          ],
          'secondary' => [
             'db_driver'    => 'mysql',
-            'db_host'      => getenv('SECONDARY_HOST'),
-            'db_user'      => getenv('SECONDARY_USER'),
-            'db_pass'      => getenv('SECONDARY_PASS'),
-            'db_name'      => getenv('SECONDARY_NAME'),
+            'db_host'      => '127.0.0.1',
+            'db_port'      => '3306',
+            'db_user'      => 'root',
+            'db_pass'      => 'password',
+            'db_name'      => 'database',
             'db_charset'   => 'utf8',
             'db_collation' => 'utf8_general_ci',
             'db_prefix'    => ''
