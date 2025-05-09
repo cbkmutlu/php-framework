@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 return [
    'app' => [
-      'env'     => '.env.local',
-      'routes'  => ['Config/Routes'],
-      'swagger' => [
-         // php cli hash 1234
-         'user' => '$argon2id$v=19$m=65536,t=4,p=1$QkFYZS5vLjMyclN0cVJNSA$tqbN14XVvOCV6/zry2tOTpnDpAJNrMLOoE+F4oRprxw',
+      'migrations' => 'App/Migrations',   // App/Modules/*/Migrations
+      'routes'     => 'App/Routes',       // App/Modules/*/Routes
+      'env'        => '.env.local',
+      'swagger'    => [
+         'user' => '$argon2id$v=19$m=65536,t=4,p=1$QkFYZS5vLjMyclN0cVJNSA$tqbN14XVvOCV6/zry2tOTpnDpAJNrMLOoE+F4oRprxw', // php cli hash 1234
       ]
    ],
 
@@ -51,8 +51,8 @@ return [
             'db_user'      => getenv('DB_USER'),
             'db_pass'      => getenv('DB_PASS'),
             'db_name'      => getenv('DB_NAME'),
-            'db_charset'   => 'utf8',
-            'db_collation' => 'utf8_general_ci',
+            'db_charset'   => 'utf8mb4',
+            'db_collation' => 'utf8mb4_general_ci',
             'db_prefix'    => ''
          ],
          'secondary' => [
@@ -62,8 +62,8 @@ return [
             'db_user'      => 'root',
             'db_pass'      => 'password',
             'db_name'      => 'database',
-            'db_charset'   => 'utf8',
-            'db_collation' => 'utf8_general_ci',
+            'db_charset'   => 'utf8mb4',
+            'db_collation' => 'utf8mb4_general_ci',
             'db_prefix'    => ''
          ]
       ]
