@@ -3,8 +3,13 @@ window.onload = function () {
 
    window.ui = SwaggerUIBundle({
       // url: "./swagger/json",
-      urls: [{ url: "./swagger/json", name: "Backend" }],
-      "urls.primaryName": "Backend",
+      urls: [
+         {
+            url: "./swagger/json",
+            name: "Default"
+         }
+      ],
+      "urls.primaryName": "Default",
       syntaxHighlight: { activated: false },
       dom_id: "#swagger-ui",
       docExpansion: "list",
