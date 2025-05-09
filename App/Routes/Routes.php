@@ -5,17 +5,19 @@ declare(strict_types=1);
 // use System\Exception\SystemException;
 
 use App\Core\Middlewares\Auth;
-use App\Modules\DMS\Controllers\DealerController;
-use App\Modules\Swagger\Controllers\Swagger;
+use App\Core\Middlewares\Swagger;
+use App\Modules\Test\Controllers\SwaggerController;
 use App\Modules\Test\Controllers\TestController;
 use System\Starter\Starter;
 
 $route = Starter::router();
 
 // swagger
-$route->prefix('swagger')->module('swagger')->group(function () use ($route) {
-   $route->get('/', [Swagger::class, 'view']);
-   $route->get('/json', [Swagger::class, 'json']);
+$route->prefix('swagger')->middleware([Swagger::class])->group(function () use ($route) {
+   $route->get('/', function () {
+      require ROOT_DIR . '/Public/swagger/index.html';
+   });
+   $route->get('/json', [SwaggerController::class, 'json']);
 });
 
 // error
@@ -32,6 +34,11 @@ $route->prefix('test')->group(function () use ($route) {
    $route->put('/', [TestController::class, 'putUser']);
    $route->delete('/{id}', [TestController::class, 'hardDeleteUser'])->where(['id' => '([0-9]+)']);
    $route->delete('/', [TestController::class, 'softDeleteUser']);
+
+   // nested
+   // $route->middleware([Auth::class])->group(function () use ($route) {
+   //    $route->get('/benchmark', [TestController::class, 'getBenchmark']);
+   // });
 });
 
 $route->prefix('test')->middleware([Auth::class])->group(function () use ($route) {
