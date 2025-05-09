@@ -7,7 +7,7 @@ namespace App\Core\Middlewares;
 use System\Http\Response;
 use System\Jwt\Jwt;
 use System\Http\Request;
-use System\Jwt\JwtException;
+// use System\Jwt\JwtException;
 
 class Auth {
    public function __construct(
@@ -19,7 +19,9 @@ class Auth {
 
    public function handle(callable $next): mixed {
       if (!preg_match('/Bearer\s(\S+)/', $this->request->authorization(), $matches) || empty($matches[1])) {
-         throw new JwtException('Token not found or invalid', 401);
+         // throw new JwtException('Token not found or invalid', 401);
+         header('HTTP/1.1 401 Unauthorized');
+         return null;
       }
 
       $token = $matches[1];
