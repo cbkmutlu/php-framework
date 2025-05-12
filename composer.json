@@ -1,6 +1,7 @@
 {
-   "type": "project",
+   "name": "cbkmutlu/php-framework",
    "description": "Mini Framework",
+   "type": "library",
    "license": "MIT",
    "require": {
       "php": ">=8.1.0",
