@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
-use System\Container\Container;
-use System\Starter\Starter;
 use System\Router\Router;
+use System\Starter\Starter;
+use System\Container\Container;
+use App\Core\Middlewares\Swagger;
+use App\Modules\Test\Controllers\SwaggerController;
 
 // Requires
 require_once __DIR__ . "/App/Config/Constants.php";
@@ -21,7 +23,32 @@ $container->register();
 set_exception_handler([$container->get('error'), 'handleException']);
 set_error_handler([$container->get('error'), 'handleError']);
 
-// Starter
+// Router
 $router = new Router($container);
+$router->prefix('swagger')->middleware([Swagger::class])->group(function () use ($router) {
+   $router->get('/', function () {
+      require ROOT_DIR . '/Public/swagger/index.html';
+   });
+
+   $router->get('/swaggerJson', [SwaggerController::class, 'json']);
+
+   $router->get('/list', function () {
+      header('Content-type: application/json; charset=UTF-8');
+      print(json_encode([
+         [
+            'url' => './swagger/swaggerJson',
+            'name' => 'SwaggerController'
+         ]
+      ]));
+   });
+});
+
+$router->error(function ($uri) {
+   header('HTTP/1.1 404 Not Found');
+   // throw new SystemException("Route not found [{$uri}]", 404, true);
+   exit();
+});
+
+// Starter
 $app = new Starter($router);
 $app->run();

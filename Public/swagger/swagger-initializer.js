@@ -1,15 +1,9 @@
-window.onload = function () {
-   //<editor-fold desc="Changeable Configuration Block">
+window.onload = async function () {
+   const response = await fetch("./swagger/list");
+   const urls = await response.json();
 
    window.ui = SwaggerUIBundle({
-      // url: "./swagger/json",
-      urls: [
-         {
-            url: "./swagger/json",
-            name: "Default"
-         }
-      ],
-      "urls.primaryName": "Default",
+      urls: urls,
       syntaxHighlight: { activated: false },
       dom_id: "#swagger-ui",
       docExpansion: "list",
@@ -43,6 +37,4 @@ window.onload = function () {
          return req;
       }
    });
-
-   //</editor-fold>
 };
