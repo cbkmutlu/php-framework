@@ -14,16 +14,14 @@ class Swagger {
    public function handle(callable $next): mixed {
       if (!isset($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW'])) {
          header('WWW-Authenticate: Basic realm="Swagger Restricted Access"');
-         header($_SERVER['SERVER_PROTOCOL'] . ' 401 Unauthorized');
-         return null;
+         return http_response_code(401);
       }
 
       $user = $_SERVER['PHP_AUTH_USER'];
       $pass = $_SERVER['PHP_AUTH_PW'];
 
       if (!isset($this->users[$user]) || !password_verify($pass, $this->users[$user])) {
-         header($_SERVER['SERVER_PROTOCOL'] . ' 403 Forbidden');
-         return null;
+         return http_response_code(403);
       }
 
       // header('Content-Security-Policy: default-src "self"; script-src "self" "unsafe-eval"; style-src "self" "unsafe-inline"; img-src "self" data:;');
