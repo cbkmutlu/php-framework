@@ -4,16 +4,20 @@ declare(strict_types=1);
 
 namespace App\Core\Abstracts;
 
+use System\View\View;
 use System\Http\Request;
 use System\Http\Response;
 use System\Controller\Controller;
-use System\Exception\SystemException;
-use System\View\View;
 
 abstract class BaseController extends Controller {
    protected Request $request;
    protected Response $response;
    protected View $view;
+   protected int $lang_id;
+
+   final public function language(): int {
+      return (int) ($this->request->get('lang_id') ?? 1);
+   }
 
    final public function theme(string $theme): self {
       $this->view->theme($theme);
@@ -39,14 +43,5 @@ abstract class BaseController extends Controller {
       }
 
       $this->response->json($message, null, $error, $code);
-   }
-
-   final function result(object $callback) {
-      try {
-         $result = $callback();
-         return $this->success($result);
-      } catch (SystemException $e) {
-         return $this->error($e);
-      }
    }
 }

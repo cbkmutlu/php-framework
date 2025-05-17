@@ -10,7 +10,7 @@ abstract class BaseRepository {
    protected Database $database;
    protected $table;
 
-   public function existBy(array $where, array $params = []): bool {
+   public function existBy(string $where, array $params = []): bool {
       $result = $this->database
          ->table($this->table)
          ->select()
@@ -20,22 +20,14 @@ abstract class BaseRepository {
       return $result->getRow() !== false;
    }
 
-   public function getRow(int $id): mixed {
-      $result = $this->database
-         ->table($this->table)
-         ->select()
-         ->where(['id = ?'])
-         ->execute([$id]);
-
-      return $result->getRow();
-   }
-
    public function hardDelete(int $id): mixed {
       $result = $this->database
          ->table($this->table)
          ->delete()
-         ->where(['id = :id'])
-         ->execute(['id' => $id]);
+         ->where('id = :id')
+         ->execute([
+            'id' => $id
+         ]);
 
       if ($result->getAffectedRows() > 0) {
          return true;
@@ -47,12 +39,15 @@ abstract class BaseRepository {
    public function softDelete(int $id): mixed {
       $result = $this->database
          ->table($this->table)
-         ->update(['is_deleted'])
-         ->where(['id = :id'])
-         ->execute(['id' => $id, 'is_deleted' => 1]);
+         ->update(['deleted_at'])
+         ->where('id = :id')
+         ->execute([
+            'id' => $id,
+            'deleted_at' => date('Y-m-d H:i:s')
+         ]);
 
       if ($result->getAffectedRows() > 0) {
-         return $this->getRow((int) $id);
+         return true;
       }
 
       return null;
