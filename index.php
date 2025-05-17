@@ -7,6 +7,7 @@ use System\Starter\Starter;
 use System\Container\Container;
 use App\Core\Middlewares\Swagger;
 use App\Modules\Test\Controllers\SwaggerController;
+// use System\Router\RouterException;
 
 // Requires
 require_once __DIR__ . "/App/Config/Constants.php";
@@ -43,11 +44,16 @@ $router->prefix('swagger')->middleware([Swagger::class])->group(function () use 
    });
 });
 
-$router->error(function ($uri) {
-   header('HTTP/1.1 404 Not Found');
-   // throw new SystemException("Route not found [{$uri}]", 404, true);
-   exit();
-});
+// $router->error(function ($uri) {
+//    $config = import_config('defines.header');
+//    header('Access-Control-Allow-Origin: ' . $config['allow-origin']);
+//    header('Access-Control-Allow-Headers: ' . $config['allow-headers']);
+//    header('Access-Control-Allow-Methods: ' . $config['allow-methods']);
+//    header('Access-Control-Allow-Credentials: ' . $config['allow-credentials']);
+//    http_response_code(404);
+//    exit();
+//    throw new RouterException("Route not found [{$uri}]", 404);
+// });
 
 // Starter
 $app = new Starter($router);
