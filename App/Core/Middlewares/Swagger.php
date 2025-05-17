@@ -14,8 +14,7 @@ class Swagger {
    public function handle(callable $next): mixed {
       if (!isset($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW'])) {
          header('WWW-Authenticate: Basic realm="Swagger Restricted Access"');
-         header('HTTP/1.0 401 Unauthorized');
-         // exit('401 Unauthorized');
+         header($_SERVER['SERVER_PROTOCOL'] . ' 401 Unauthorized');
          return null;
       }
 
@@ -23,12 +22,11 @@ class Swagger {
       $pass = $_SERVER['PHP_AUTH_PW'];
 
       if (!isset($this->users[$user]) || !password_verify($pass, $this->users[$user])) {
-         header('HTTP/1.0 403 Forbidden');
-         // exit('403 Forbidden');
+         header($_SERVER['SERVER_PROTOCOL'] . ' 403 Forbidden');
          return null;
       }
 
-      header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;");
+      // header('Content-Security-Policy: default-src "self"; script-src "self" "unsafe-eval"; style-src "self" "unsafe-inline"; img-src "self" data:;');
       return $next();
    }
 }
