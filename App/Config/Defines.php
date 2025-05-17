@@ -12,6 +12,13 @@ return [
       ]
    ],
 
+   'header' => [
+      'allow-origin'      => '*',
+      'allow-headers'     => 'Cache-Control, Pragma, Origin, Content-Type, Authorization, X-Requested-With',
+      'allow-methods'     => 'GET, POST, PUT, DELETE',
+      'allow-credentials' => false
+   ],
+
    'language' => [
       'default' => 'tr_TR',
       'locales' => [
