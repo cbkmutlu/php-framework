@@ -1,0 +1,6 @@
+*.log
+*.local
+migration.json
+
+vendor
+Public/upload
