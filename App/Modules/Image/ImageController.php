@@ -44,7 +44,7 @@ class ImageController extends BaseController {
          $path = $this->request->post('path');
 
          $request = new ImageRequest();
-         $request->fromArray(compact('files', 'path'));
+         $request->fromArray(['files' => $files, 'path' => $path]);
          $result = $this->service->upload($request->files, $request->path);
 
          return $result;
