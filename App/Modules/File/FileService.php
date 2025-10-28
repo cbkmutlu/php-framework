@@ -2,23 +2,23 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\Image;
+namespace App\Modules\File;
 
 use System\Upload\Upload;
 use System\Database\Database;
 use System\Validation\Validation;
 use App\Core\Abstracts\BaseService;
-use App\Modules\Image\ImageRepository;
+use App\Modules\File\FileRepository;
 
-class ImageService extends BaseService {
-   /** @var ImageRepository */
+class FileService extends BaseService {
+   /** @var FileRepository */
    protected mixed $repository;
 
    public function __construct(
       protected Database $database,
       protected Upload $upload,
       protected Validation $validation,
-      ImageRepository $repository
+      FileRepository $repository
    ) {
       $this->repository = $repository;
    }

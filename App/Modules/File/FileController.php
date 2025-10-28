@@ -2,33 +2,33 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\Image;
+namespace App\Modules\File;
 
 use System\Http\Request;
 use System\Http\Response;
-use App\Modules\Image\ImageService;
-use App\Modules\Image\ImageRequest;
+use App\Modules\File\FileService;
+use App\Modules\File\FileRequest;
 use App\Core\Abstracts\BaseController;
 
 /**
- * @OA\Tag(name="Image", description="Resim işlemleri")
+ * @OA\Tag(name="File", description="Dosya işlemleri")
  */
-class ImageController extends BaseController {
+class FileController extends BaseController {
    public function __construct(
       protected Response $response,
       protected Request $request,
-      protected ImageService $service
+      protected FileService $service
    ) {
    }
 
    /**
-    * @OA\Post(tags={"Image"}, path="/image/create", summary="Resim yükle",
+    * @OA\Post(tags={"File"}, path="/file/", summary="Dosya yükle",
     *    @OA\Response(response=201, description="Success"),
     *    @OA\RequestBody(required=true,
     *       @OA\MediaType(mediaType="multipart/form-data",
     *          @OA\Schema(
     *             required={"path", "files[]"},
-    *             @OA\Property(property="path", type="string", example="/images/products"),
+    *             @OA\Property(property="path", type="string", example="/files/products"),
     *             @OA\Property(property="files[]", type="array",
     *                @OA\Items(type="string", format="binary"),
     *                description="Upload multiple files"
@@ -38,12 +38,12 @@ class ImageController extends BaseController {
     *    )
     * )
     */
-   public function uploadImage() {
+   public function uploadFile() {
       $this->response(function () {
          $files = $this->request->files();
          $path = $this->request->post('path');
 
-         $request = new ImageRequest();
+         $request = new FileRequest();
          $request->fromArray(['files' => $files, 'path' => $path]);
          $result = $this->service->upload($request->files, $request->path);
 
@@ -52,22 +52,19 @@ class ImageController extends BaseController {
    }
 
    /**
-    * @OA\Post(tags={"Image"}, path="/image/delete", summary="Resim sil",
+    * @OA\Patch(tags={"File"}, path="/file/", summary="Dosya sil",
     *    @OA\Response(response=200, description="Success"),
     *    @OA\RequestBody(required=true, @OA\JsonContent(
-    *       required={"id", "table"},
-    *       @OA\Property(property="id", type="integer", example=1),
-    *       @OA\Property(property="table", type="string", example="product"),
-    *       @OA\Property(property="unlink", type="boolean", example=true),
-    *       @OA\Property(property="delete", type="boolean", example=false)
+    *       required={"path"},
+    *       @OA\Property(property="path", type="string", example="image.png"),
     *    ))
     * )
     */
-   public function deleteImage() {
+   public function unlinkFile() {
       $this->response(function () {
          $json = $this->request->json();
 
-         $request = new ImageRequest();
+         $request = new FileRequest();
          $request->fromArray($json);
          $result = $this->service->unlink($request->toArray());
 
