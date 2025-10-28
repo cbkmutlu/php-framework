@@ -15,7 +15,7 @@ return [
    'header' => [
       'allow-origin'      => '*',
       'allow-headers'     => 'Cache-Control, Pragma, Origin, Content-Type, Authorization, X-Requested-With',
-      'allow-methods'     => 'GET, POST, PUT, DELETE, OPTIONS',
+      'allow-methods'     => 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
       'allow-credentials' => false
    ],
 
