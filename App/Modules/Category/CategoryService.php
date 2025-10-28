@@ -7,6 +7,7 @@ namespace App\Modules\Category;
 use System\Database\Database;
 use System\Validation\Validation;
 use App\Core\Abstracts\BaseService;
+use System\Exception\SystemException;
 use App\Modules\Category\CategoryRequest;
 use App\Modules\Category\CategoryRepository;
 
@@ -22,54 +23,80 @@ class CategoryService extends BaseService {
       $this->repository = $repository;
    }
 
-   public function createCategory(CategoryRequest $dto): array {
-      return $this->transaction(function () use ($dto) {
-         $this->validate($dto->toArray(), [
-            'code' => 'required',
-            'title' => 'required',
-            'image_path' => 'nullable',
-            'is_active' => 'required|numeric',
-            'sort_order' => 'required|numeric'
-         ]);
+   /**
+    * create
+    */
+   public function createCategory(CategoryRequest $request): array {
+      $this->checkFields($request);
 
+      return $this->transaction(function () use ($request) {
          $id = $this->create([
-            'code' => $dto->code,
-            'title' => $dto->title,
-            'content' => $dto->content,
-            'image_path' => $dto->image_path,
-            'is_active' => $dto->is_active,
-            'sort_order' => $dto->sort_order
+            'code' => $request->code,
+            'title' => $request->title,
+            'content' => $request->content,
+            'image_path' => $request->image_path,
+            'is_active' => $request->is_active,
+            'sort_order' => $request->sort_order
          ]);
 
          return $this->getOne($id);
       });
    }
 
-   public function updateCategory(CategoryRequest $dto): array {
-      return $this->transaction(function () use ($dto) {
-         $this->check([
-            'id' => $dto->id
+   /**
+    * update
+    */
+   public function updateCategory(CategoryRequest $request): array {
+      $this->checkFields($request, false);
+
+      return $this->transaction(function () use ($request) {
+         // find image and unlink
+         if ($request->image_path) {
+            $this->unlink([
+               'id' => $request->id,
+               'table' => 'category',
+               'field' => 'image_path'
+            ]);
+         }
+
+         $this->update($request, [
+            'code' => $request->code,
+            'title' => $request->title,
+            'content' => $request->content,
+            'image_path' => $request->image_path,
+            'is_active' => $request->is_active,
+            'sort_order' => $request->sort_order
+         ], [
+            'id' => $request->id
          ]);
 
-         $this->validate($dto->toArray(), [
-            'id' => 'required|numeric',
+         return $this->getOne($request->id);
+      });
+   }
+
+   /**
+    * check
+    */
+   private function checkFields(CategoryRequest $request, bool $create = true): void {
+      try {
+         $this->validate($request->toArray(), [
+            'code' => 'required',
             'title' => 'required',
             'is_active' => 'required|numeric',
-            'sort_order' => 'required|numeric'
+            'sort_order' => 'required|numeric',
          ]);
 
-         $this->update($dto, [
-            'code' => $dto->code,
-            'title' => $dto->title,
-            'content' => $dto->content,
-            'image_path' => $dto->image_path,
-            'is_active' => $dto->is_active,
-            'sort_order' => $dto->sort_order
-         ], [
-            'id' => $dto->id
-         ]);
+         $this->check([
+            'code' => $request->code
+         ], $request, $create);
+      } catch (SystemException $e) {
+         if ($request->image_path) {
+            $this->unlink([
+               'path' => $request->image_path
+            ]);
+         }
 
-         return $this->getOne($dto->id);
-      });
+         throw $e;
+      }
    }
 }

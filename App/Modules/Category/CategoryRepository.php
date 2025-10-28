@@ -13,29 +13,4 @@ class CategoryRepository extends BaseRepository {
       protected string $table = 'category'
    ) {
    }
-
-   public function findAll(): array {
-      return $this->database
-         ->prepare('SELECT
-               category.*
-            FROM category
-            WHERE category.deleted_at IS NULL
-         ')
-         ->execute()
-         ->fetchAll();
-   }
-
-   public function findOne(int $id): array|false {
-      return $this->database
-         ->prepare('SELECT
-               category.*
-            FROM category
-            WHERE category.deleted_at IS NULL
-               AND category.id = :id
-         ')
-         ->execute([
-            'id' => $id
-         ])
-         ->fetch();
-   }
 }

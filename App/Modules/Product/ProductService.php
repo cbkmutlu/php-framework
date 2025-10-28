@@ -23,16 +23,23 @@ class ProductService extends BaseService {
       $this->repository = $repository;
    }
 
+   /**
+    * getAll
+    */
    public function getAll(): array {
       $result = $this->repository->findAll();
 
       return array_map(function ($item) {
          $item['category_list'] = $this->repository->findCategory($item['id']);
          $item['image_list'] = $this->repository->findImage($item['id']);
+
          return $item;
       }, $result);
    }
 
+   /**
+    * getOne
+    */
    public function getOne(int $id): array {
       $result = $this->repository->findOne($id);
 
@@ -46,76 +53,59 @@ class ProductService extends BaseService {
       return $result;
    }
 
-   public function createProduct(ProductRequest $dto): array {
-      return $this->transaction(function () use ($dto) {
-         $this->validate($dto->toArray(), [
-            'code' => 'required',
-            'title' => 'required',
-            'is_active' => 'required|numeric',
-            'sort_order' => 'required|numeric',
-            'product_category' => 'required|must_be_array'
-         ]);
+   /**
+    * create
+    */
+   public function createProduct(ProductRequest $request): array {
+      $this->checkFields($request);
 
+      return $this->transaction(function () use ($request): array {
          $id = $this->create([
-            'code' => $dto->code,
-            'title' => $dto->title,
-            'content' => $dto->content,
-            'is_active' => $dto->is_active,
-            'sort_order' => $dto->sort_order,
+            'code' => $request->code,
+            'title' => $request->title,
+            'content' => $request->content,
+            'is_active' => $request->is_active,
+            'sort_order' => $request->sort_order,
          ]);
 
-         $this->createRelation($dto, $id);
+         // create relation
+         $this->createRelation($request, $id);
 
          return $this->getOne($id);
       });
    }
 
-   public function updateProduct(ProductRequest $dto): array {
-      return $this->transaction(function () use ($dto) {
-         $this->check([
-            'id' => $dto->id
-         ]);
+   /**
+    * update
+    */
+   public function updateProduct(ProductRequest $request): array {
+      $this->checkFields($request, false);
 
-         $this->validate($dto->toArray(), [
-            'id' => 'required|numeric',
-            'title' => 'required',
-            'is_active' => 'required|numeric',
-            'sort_order' => 'required|numeric'
-         ]);
+      return $this->transaction(function () use ($request): array {
+         $this->update($request, [
+            'code' => $request->code,
+            'title' => $request->title,
+            'content' => $request->content,
+            'is_active' => $request->is_active,
+            'sort_order' => $request->sort_order,
+         ], ['id' => $request->id]);
 
-         $this->update($dto, [
-            'code' => $dto->code,
-            'title' => $dto->title,
-            'content' => $dto->content,
-            'is_active' => $dto->is_active,
-            'sort_order' => $dto->sort_order,
-         ], [
-            'id' => $dto->id
-         ]);
+         // update relation
+         $this->updateRelation($request, $request->id);
 
-         if (isset($dto->image_path) && is_array($dto->image_path)) {
-            foreach ($dto->image_path as $path) {
-               $this->create([
-                  'product_id' => $dto->id,
-                  'image_path' => $path
-               ], 'product_image');
-            }
-         }
-
-         $this->updateRelation($dto, [
-            'product_category'
-         ]);
-
-         return $this->getOne($dto->id);
+         return $this->getOne($request->id);
       });
    }
 
-   private function createRelation(ProductRequest $dto, int $id): void {
-      if (isset($dto->product_category) && is_array($dto->product_category)) {
-         foreach ($dto->product_category as $category_id) {
+   /**
+    * create relation
+    */
+   private function createRelation(ProductRequest $request, int $productId): void {
+      if (is_array($request->product_category)) {
+         foreach ($request->product_category as $categoryId) {
             $category = $this->repository->create([
-               'product_id' => $id,
-               'category_id' => $category_id
+               'product_id' => $productId,
+               'category_id' => $categoryId
             ], 'product_category');
 
             if ($category->affectedRows() <= 0) {
@@ -123,17 +113,58 @@ class ProductService extends BaseService {
             }
          }
       }
-   }
 
-   private function updateRelation(ProductRequest $dto, array $tables): void {
-      foreach ($tables as $table) {
-         if (isset($dto->$table) && is_array($dto->$table)) {
-            $this->repository->hardDelete([
-               'product_id' => $dto->id
-            ], $table);
+      if (is_array($request->image_path)) {
+         foreach ($request->image_path as $imagePath) {
+            $image = $this->repository->create([
+               'product_id' => $productId,
+               'image_path' => $imagePath
+            ], 'product_image');
+
+            if ($image->affectedRows() <= 0) {
+               throw new SystemException('Image relation not created', 400);
+            }
          }
       }
+   }
 
-      $this->createRelation($dto, $dto->id);
+   /**
+    * update relation
+    */
+   private function updateRelation(ProductRequest $request, int $productId): void {
+      if (is_array($request->product_category)) {
+         $this->repository->hardDelete([
+            'product_id' => $productId
+         ], 'product_category');
+
+         $this->createRelation($request, $productId);
+      }
+   }
+
+   /**
+    * check
+    */
+   private function checkFields(ProductRequest $request, bool $create = true): void {
+      try {
+         $this->validate($request->toArray(), [
+            'code' => 'required',
+            'title' => 'required',
+            'is_active' => 'required|numeric',
+            'sort_order' => 'required|numeric',
+         ]);
+
+         $this->check([
+            'code' => $request->code
+         ], $request, $create);
+
+      } catch (SystemException $e) {
+         if ($request->image_path) {
+            $this->unlink([
+               'path' => $request->image_path
+            ]);
+         }
+
+         throw $e;
+      }
    }
 }

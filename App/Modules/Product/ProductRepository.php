@@ -14,31 +14,6 @@ class ProductRepository extends BaseRepository {
    ) {
    }
 
-   public function findAll(): array {
-      return $this->database
-         ->prepare('SELECT
-               product.*
-            FROM product
-            WHERE product.deleted_at IS NULL
-         ')
-         ->execute()
-         ->fetchAll();
-   }
-
-   public function findOne(int $id): array|false {
-      return $this->database
-         ->prepare('SELECT
-               product.*
-            FROM product
-            WHERE product.deleted_at IS NULL
-               AND product.id = :id
-         ')
-         ->execute([
-            'id' => $id
-         ])
-         ->fetch();
-   }
-
    public function findCategory(int $product_id): array {
       return $this->database
          ->prepare('SELECT
