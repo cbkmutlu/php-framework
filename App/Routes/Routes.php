@@ -3,16 +3,16 @@
 declare(strict_types=1);
 
 use App\Core\Middlewares\Auth;
-use App\Modules\Image\ImageController;
+use App\Modules\File\FileController;
 use App\Modules\Product\ProductController;
 use App\Modules\Category\CategoryController;
 
 /** @var System\Router\Router $router */
 
-// Image routes for image_path
-$router->prefix('v1/image')->middleware([Auth::class])->group(function () use ($router) {
-   $router->post('/create', [ImageController::class, 'uploadImage']);
-   $router->post('/delete', [ImageController::class, 'deleteImage']);
+// File routes
+$router->prefix('v1/file')->middleware([Auth::class])->group(function () use ($router) {
+   $router->post('/', [FileController::class, 'uploadFile']);
+   $router->patch('/', [FileController::class, 'unlinkFile']);
 });
 
 // Product routes
