@@ -56,7 +56,7 @@ abstract class BaseService {
     * @return int oluşturulan kaydın ID değeri
     * @throws SystemException kayıt oluşturulamazsa 400 hatası fırlatır
     */
-   protected function create(array $fields, ?string $table = null): int {
+   public function create(array $fields, ?string $table = null): int {
       $result = $this->repository->create($fields, $table);
 
       if ($result->affectedRows() <= 0) {
@@ -78,7 +78,7 @@ abstract class BaseService {
     *
     * @throws SystemException kayıt güncellenemezse 400 hatası fırlatır
     */
-   protected function update(BaseResource $data, array $fields, array $where, ?string $table = null): void {
+   public function update(BaseResource $data, array $fields, array $where, ?string $table = null): void {
       $fields = $data->optionalArray($fields);
 
       if (!empty($fields)) {
@@ -91,7 +91,23 @@ abstract class BaseService {
    }
 
    /**
-    * Verilen parametrelere sahip kaydı ilgili yöntemle (softDelete, hardDelete) siler.
+    * Çoklu veriyi tek sorguda günceller.
+    * Anahtarlar tablo alanlarını, değerler ise kayıtları temsil eder.
+    *
+    * @param array $items `[['id' => 1, 'order' => 2], ['id' => 2, 'order' => 1]]` gibi olmalıdır
+    *
+    * @return array güncellenen veriler
+    */
+   public function updateCase(array $request): array {
+      return $this->transaction(function () use ($request): array {
+         $this->repository->updateCase('order', $request, 'id');
+
+         return $this->repository->findCase($request, 'id');
+      });
+   }
+
+   /**
+    * Verilen parametrelere sahip kaydı `deleted_at` olarak işaretler.
     *
     * @param array $where `['id' => 1]` gibi olmalıdır
     * @param string|null $table varsayılan olarak model tablosu kullanılır
@@ -99,7 +115,7 @@ abstract class BaseService {
     * @return bool silme işlemi başarılıysa `true` döner
     * @throws SystemException kayıt silinemezse 400 hatası fırlatır
     */
-   public function delete(array $where, ?string $table = null): bool {
+   public function softDelete(array $where, ?string $table = null): bool {
       $result = $this->repository->softDelete($where, $table);
 
       if ($result->affectedRows() <= 0) {
@@ -110,18 +126,51 @@ abstract class BaseService {
    }
 
    /**
-    * Verilen parametrelere sahip bir kaydın var olup olmadığını kontrol eder.
+    * Verilen parametrelere sahip kaydı tamamen siler.
     *
     * @param array $where `['id' => 1]` gibi olmalıdır
     * @param string|null $table varsayılan olarak model tablosu kullanılır
     *
-    * @throws SystemException kayıt bulunamazsa 404 hatası fırlatır
+    * @return bool silme işlemi başarılıysa `true` döner
+    * @throws SystemException kayıt silinemezse 400 hatası fırlatır
     */
-   final public function check(array $where, ?string $table = null): void {
-      $result = $this->repository->findBy($where, $table);
+   public function hardDelete(array $where, ?string $table = null): bool {
+      $result = $this->repository->hardDelete($where, $table);
 
-      if (empty($result)) {
-         throw new SystemException('Record not found', 404);
+      if ($result->affectedRows() <= 0) {
+         throw new SystemException('Failed to delete the record', 400);
+      }
+
+      return true;
+   }
+
+   /**
+    * Verilen alanlar ve verilerdeki ID'ye göre kayıt varlığını kontrol eder.
+    * Eğer kayıt varsa ve oluşturma işlemi ise hata fırlatır.
+    * Eğer kayıt yoksa ve güncelleme işlemi ise hata fırlatır.
+    *
+    * @param array $fields `['name' => 'John', 'age' => 30]` gibi olmalıdır
+    * @param BaseResource $data DTO nesnesi
+    * @param bool $create oluşturma işlemi mi?
+    *
+    * @throws SystemException kayıt varsa ve oluşturma işlemi ise 400 hatası fırlatır
+    * @throws SystemException kayıt yoksa ve güncelleme işlemi ise 404 hatası fırlatır
+    */
+   public function check(array $fields, BaseResource $data, bool $create = true): void {
+      $exist = $this->repository->findBy($fields);
+
+      if ($create) {
+         if (!empty($exist)) {
+            throw new SystemException('Record already exists', 400);
+         }
+      } else {
+         $id = $data->toArray()['id'];
+         if (!$this->repository->findOne($id)) {
+            throw new SystemException('Record not found', 404);
+         }
+         if (!empty($exist) && $exist['id'] !== (int) $id) {
+            throw new SystemException('Record already exists', 400);
+         }
       }
    }
 
@@ -260,45 +309,50 @@ abstract class BaseService {
    }
 
    /**
-    * Verilen parametrelere sahip kaydı ve dosyayı siler.
+    * Verilen tablo ve alan adı ile kayıtta bulunan dosyayı siler veya dosya yolu verilirse direkt olarak silinir.
+    * Eğer `delete` parametresi `true` ise kayıt da silinir. Varsayılan değeri `false`dır.
     *
-    * @param array $request Aşağıdaki anahtarları içermelidir:
-    * - `id` (int): Güncellenecek veritabanı kaydının ID değeri.
-    * - `table` (string): İşlem yapılacak veritabanı tablosunun adı.
-    * - `unlink` (bool): Dosya silme işlemini yapar. Varsayılan olarak `true` değeri alır.
-    * - `delete` (bool): Kaydı silme işlemini yapar. Varsayılan olarak `false` değeri alır.
+    * @param array $request `['id' => 1, 'table' => 'product', 'field' => 'image', 'delete' => true]` veya `['path' => 'path/to/file']` gibi olmalıdır
     *
-    * @return bool güncelleme başarılıysa true döner
-    * @throws SystemException kayıt güncellenemezse 400 hatası fırlatır
+    * @return bool silme işlemi başarılıysa `true` döner
+    * @throws SystemException silme işlemi başarısız olursa 400 hatası fırlatır
     */
    final public function unlink(array $request): bool {
-      $unlink = $request['unlink'] ?? true;
-      $method = $request['delete'] ?? false;
-
-      $result = $this->repository->findBy([
-         'id' => $request['id']
-      ], $request['table']);
-
-      if (empty($result) || empty($result['image_path'])) {
-         throw new SystemException('Record not found', 404);
-      }
-
-      if ($unlink && file_exists($result['image_path'])) {
-         unlink($result['image_path']);
-      }
-
-      if ($method) {
-         $this->repository->hardDelete([
-            'id' => $request['id']
+      if (isset($request['id']) && isset($request['table']) && isset($request['field'])) {
+         $result = $this->repository->findBy([
+            'id' => $request['id'],
+            $request['field'] => ['IS NOT NULL']
          ], $request['table']);
+
+         if (!empty($result[$request['field']])) {
+            $this->repository->update([
+               $request['field'] => null
+            ], [
+               'id' => $request['id']
+            ], $request['table']);
+
+            if (file_exists($result[$request['field']])) {
+               unlink($result[$request['field']]);
+            }
+
+            if (isset($request['delete']) && $request['delete']) {
+               $this->hardDelete([
+                  'id' => $request['id']
+               ], $request['table']);
+            }
+
+            return true;
+         }
+      } else if (isset($request['path'])) {
+         if (file_exists($request['path'])) {
+            unlink($request['path']);
+         }
+
+         return true;
       } else {
-         $this->repository->update([
-            'image_path' => null
-         ], [
-            'id' => $request['id']
-         ], $request['table']);
+         throw new SystemException('Invalid request', 400);
       }
 
-      return true;
+      return false;
    }
 }
