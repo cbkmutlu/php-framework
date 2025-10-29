@@ -59,16 +59,14 @@ class CategoryService extends BaseService {
             ]);
          }
 
-         $this->update($request, [
+         $this->update([
             'code' => $request->code,
             'title' => $request->title,
             'content' => $request->content,
             'image_path' => $request->image_path,
             'is_active' => $request->is_active,
             'sort_order' => $request->sort_order
-         ], [
-            'id' => $request->id
-         ]);
+         ], $request);
 
          return $this->getOne($request->id);
       });
@@ -79,12 +77,12 @@ class CategoryService extends BaseService {
     */
    private function checkFields(CategoryRequest $request, bool $create = true): void {
       try {
-         $this->validate($request->toArray(), [
+         $this->validate([
             'code' => 'required',
             'title' => 'required',
             'is_active' => 'required|numeric',
             'sort_order' => 'required|numeric',
-         ]);
+         ], $request);
 
          $this->check([
             'code' => $request->code
