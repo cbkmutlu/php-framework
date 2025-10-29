@@ -11,8 +11,6 @@ class product_category extends Migration {
          `product_id` INT NOT NULL DEFAULT 0,
           PRIMARY KEY (`category_id`, `product_id`)
       )");
-      //  FOREIGN KEY (`category_id`) REFERENCES `category`(`id`),
-      //  FOREIGN KEY (`product_id`) REFERENCES `product`(`id`)
 
       $this->database->table('product_category')->insert([
          'category_id' => 1,

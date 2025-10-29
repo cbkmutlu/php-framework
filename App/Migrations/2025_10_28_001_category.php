@@ -9,9 +9,9 @@ class category extends Migration {
       $this->database->query("CREATE TABLE IF NOT EXISTS `category` (
          `id` INT AUTO_INCREMENT PRIMARY KEY,
          `code` VARCHAR(50) NOT NULL,
-         `title` VARCHAR(250) NOT NULL,
+         `title` VARCHAR(100) NOT NULL,
          `content` TEXT NULL DEFAULT NULL,
-         `image_path` VARCHAR(250) NULL DEFAULT NULL,
+         `image_path` VARCHAR(512) NULL DEFAULT NULL,
          `is_active` BOOLEAN NOT NULL DEFAULT 1,
          `sort_order` INT NOT NULL DEFAULT 0,
          {$this->defaults()}
