@@ -67,21 +67,22 @@ abstract class BaseService {
    }
 
    /**
-    * Verilen DTO nesnesine göre sadece izin verilen alanlarla bir kaydı günceller.
-    * Eğer güncellenecek alan yoksa işlem yapılmaz.
-    * DTO içerisinde tanımlı olan alanlar alınır ve istenmeyen alanlar güncellemeye dahil edilmez.
+    * Verilen parametrelere sahip kaydı günceller.
     * Anahtarlar tablo alanlarını, değerler ise kayıtları temsil eder.
     *
     * @param array $fields `['name' => 'John', 'age' => 30]` gibi olmalıdır
-    * @param array $where `['id' => 1]` gibi olmalıdır
+    * @param BaseResource $data DTO nesnesi
+    * @param array|null $where `['id' => 1]` gibi olmalıdır, varsayılan olarak data'daki id kullanılır
     * @param string|null $table varsayılan olarak model tablosu kullanılır
     *
+    * @return void
     * @throws SystemException kayıt güncellenemezse 400 hatası fırlatır
     */
-   public function update(BaseResource $data, array $fields, array $where, ?string $table = null): void {
+   public function update(array $fields, BaseResource $data, ?array $where = null, ?string $table = null): void {
       $fields = $data->optionalArray($fields);
 
       if (!empty($fields)) {
+         $where = $where ?? ['id' => $data->toArray()['id']];
          $result = $this->repository->update($fields, $where, $table);
 
          if ($result->affectedRows() <= 0) {
@@ -91,18 +92,20 @@ abstract class BaseService {
    }
 
    /**
-    * Çoklu veriyi tek sorguda günceller.
+    * Çoklu veriyi tek sorguda günceller ve güncellenen verileri getirir.
     * Anahtarlar tablo alanlarını, değerler ise kayıtları temsil eder.
     *
-    * @param array $items `[['id' => 1, 'order' => 2], ['id' => 2, 'order' => 1]]` gibi olmalıdır
+    * @param array $fields `[['id' => 1, 'order' => 2], ['id' => 2, 'order' => 1]]` gibi olmalıdır
+    * @param string $column `order` gibi olmalıdır
+    * @param string $where `id` gibi olmalıdır
     *
     * @return array güncellenen veriler
     */
-   public function updateCase(array $request): array {
-      return $this->transaction(function () use ($request): array {
-         $this->repository->updateCase('order', $request, 'id');
+   public function updateCase(array $fields, string $column, string $where): array {
+      return $this->transaction(function () use ($fields, $column, $where): array {
+         $this->repository->updateCase($fields, $column, $where);
 
-         return $this->repository->findCase($request, 'id');
+         return $this->repository->findCase($fields, $where);
       });
    }
 
@@ -175,15 +178,18 @@ abstract class BaseService {
    }
 
    /**
-    * Verileri kurallara göre doğrular.
-    * Dizi liste yapısında ise her bir elemanı ayrı ayrı doğrular.
+    * Verilen kurallar ve veri nesnesine göre doğrulama işlemi yapar.
+    * Eğer veri bir liste ise her bir öğe için ayrı ayrı doğrulama yapar.
+    * Doğrulama başarısız olursa hata mesajlarını JSON formatında fırlatır.
     *
-    * @param array $data tek bir veri dizisi veya çoklu liste olabilir
-    * @param array $rules uygulanacak doğrulama kuralları
+    * @param array $rules doğrulama kuralları `['name' => 'required|min_len:3', 'email' => 'required|email']` gibi olmalıdır
+    * @param BaseResource $data doğrulanacak veri nesnesi
     *
+    * @return void
     * @throws SystemException doğrulama başarısız olursa 400 hatası fırlatır
     */
-   final public function validate(array $data, array $rules): void {
+   final public function validate(array $rules, BaseResource $data): void {
+      $data = $data->toArray();
       if (array_is_list($data)) {
          foreach ($data as $item) {
             $this->validation->data($item);
@@ -206,13 +212,13 @@ abstract class BaseService {
     * Her bir dil için verilen veriye göre `language_id` ve `id` ile kayıt aranır.
     * Eğer kayıt varsa güncellenir, yoksa yeni bir çeviri olarak eklenir.
     *
-    * @param array $langs `[['language_id' => 1, 'id' => 5, 'title' => '...'], ...]`
     * @param array $fields ilişkili veriler `['product_id' => '...']` gibi olmalıdır
+    * @param array $langs `[['language_id' => 1, 'id' => 5, 'title' => '...'], ...]`
     * @param string $table çeviri tablosu adı
     *
     * @throws SystemException güncellenemez veya oluşturulamazsa 400 hatası fırlatır
     */
-   final public function translate(array $langs, array $fields, string $table_translate): void {
+   final public function translate(array $fields, array $langs, string $table_translate): void {
       foreach ($langs as $lang) {
          $lang_id = $lang['language_id'];
          unset($lang['language_id']);

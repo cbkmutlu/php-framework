@@ -89,29 +89,31 @@ abstract class BaseRepository {
     * Çoklu veriyi tek sorguda günceller.
     * Anahtarlar tablo alanlarını, değerler ise kayıtları temsil eder.
     *
-    * @param string $column `order` gibi olmalıdır
     * @param array $items `[['id' => 1, 'order' => 2], ['id' => 2, 'order' => 1]]` gibi olmalıdır
+    * @param string $column `order` gibi olmalıdır
     * @param string $where `id` gibi olmalıdır
     *
     * @return Database
     */
-   public function updateCase(string $column, array $items, string $where = 'id'): Database {
+   public function updateCase(array $items, string $column, string $where): Database {
       return $this->database
          ->table($this->table)
-         ->updateCase($column, $items, $where)
+         ->updateCase($items, $column, $where)
+         ->where([$where => ['IN', array_column($items, $where)]])
          ->prepare()
          ->execute();
    }
 
    /**
     * Çoklu veriyi tek sorguda güncellenen verileri getirir.
+    * Anahtarlar tablo alanlarını, değerler ise kayıtları temsil eder.
     *
     * @param array $items `[['id' => 1, 'order' => 2], ['id' => 2, 'order' => 1]]` gibi olmalıdır
     * @param string $where `id` gibi olmalıdır
     *
     * @return array
     */
-   public function findCase(array $items, string $where = 'id'): array {
+   public function findCase(array $items, string $where): array {
       return $this->database
          ->table($this->table)
          ->select()
