@@ -17,8 +17,8 @@ class AuthService extends Service {
    /** @var AuthRepository */
    protected mixed $repository;
 
-   protected int $accessTokenExpireHours = 1;
-   protected int $refreshTokenExpireDays = 60;
+   protected ?int $accessTokenExpire;
+   protected ?int $refreshTokenExpire;
 
    public function __construct(
       protected Crypt $crypt,
@@ -29,6 +29,9 @@ class AuthService extends Service {
       AuthRepository $repository
    ) {
       $this->repository = $repository;
+      $config = import_config('defines.jwt');
+      $this->accessTokenExpire = $config['expire']['access'];
+      $this->refreshTokenExpire = $config['expire']['refresh'];
    }
 
    /**
@@ -172,7 +175,7 @@ class AuthService extends Service {
       $accessToken = $this->jwt->createToken([
          'id' => $userId,
          'jti' => $jti,
-         'exp' => time() + $this->accessTokenExpireHours * 3600
+         'exp' => time() + $this->accessTokenExpire
       ]);
       return $accessToken;
    }
@@ -181,7 +184,7 @@ class AuthService extends Service {
     * Create refresh token
     */
    private function createRefreshToken(int $userId, string $jti, string $refreshToken): int {
-      $expire = $this->date->setDate('now')->modifyDate('+' . $this->refreshTokenExpireDays . ' day');
+      $expire = $this->date->setDate('now')->modifyDate('+' . $this->refreshTokenExpire . ' second');
       $result = $this->repository->create([
          'jti' => $jti,
          'user_id' => $userId,

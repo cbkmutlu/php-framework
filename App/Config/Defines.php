@@ -82,7 +82,10 @@ return [
       'secret'    => '57f346f52d7828a0ece45560faba0acb04db656d51369a6228adc3fb668911fd',
       'algorithm' => 'HS256',
       'leeway'    => 0,
-      'expire'    => 3600
+      'expire'    => [
+         'access'  => 3600,    // 1 hour in seconds
+         'refresh' => 5184000  // 60 days in seconds
+      ]
    ],
 
    'crypt' => [
