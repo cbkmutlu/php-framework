@@ -7,13 +7,12 @@ namespace App\Modules\File;
 use System\Http\Request;
 use System\Http\Response;
 use App\Modules\File\FileService;
-use App\Modules\File\FileRequest;
-use App\Core\Abstracts\BaseController;
+use App\Core\Abstracts\Controller;
 
 /**
  * @OA\Tag(name="File", description="Dosya işlemleri")
  */
-class FileController extends BaseController {
+class FileController extends Controller {
    public function __construct(
       protected Response $response,
       protected Request $request,
@@ -24,30 +23,17 @@ class FileController extends BaseController {
    /**
     * @OA\Post(tags={"File"}, path="/file/", summary="Dosya yükle",
     *    @OA\Response(response=201, description="Success"),
-    *    @OA\RequestBody(required=true,
-    *       @OA\MediaType(mediaType="multipart/form-data",
-    *          @OA\Schema(
-    *             required={"path", "files[]"},
-    *             @OA\Property(property="path", type="string", example="/files/products"),
-    *             @OA\Property(property="files[]", type="array",
-    *                @OA\Items(type="string", format="binary"),
-    *                description="Upload multiple files"
-    *             )
-    *          )
+    *    @OA\RequestBody(required=true, @OA\MediaType(mediaType="multipart/form-data",
+    *       @OA\Schema(required={"files[]"},
+    *          @OA\Property(property="files[]", type="array", @OA\Items(type="string", format="binary"))
     *       )
-    *    )
+    *    ))
     * )
     */
    public function uploadFile() {
       $this->response(function () {
          $files = $this->request->files();
-         $path = $this->request->post('path');
-
-         $request = new FileRequest();
-         $request->fromArray(['files' => $files, 'path' => $path]);
-         $result = $this->service->upload($request->files, $request->path);
-
-         return $result;
+         return $this->service->uploadFile($files);
       }, code: 201);
    }
 
@@ -62,13 +48,21 @@ class FileController extends BaseController {
     */
    public function unlinkFile() {
       $this->response(function () {
-         $json = $this->request->json();
+         $json = $this->request->json('path');
+         return $this->service->unlinkFile($json);
+      });
+   }
 
-         $request = new FileRequest();
-         $request->fromArray($json);
-         $result = $this->service->unlink($request->toArray());
-
-         return $result;
+   /**
+    * @OA\Get(
+    *    tags={"File"}, path="/file/", summary="Dosya proxy",
+    *    @OA\Response(response=200, description="Success"),
+    *    @OA\Parameter(name="path", in="query", required=false, @OA\Schema(type="string"))
+    * )
+    */
+   public function proxyFile() {
+      $this->response(function () {
+         return $this->service->proxyFile($this->request->get());
       });
    }
 }

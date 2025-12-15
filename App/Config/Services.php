@@ -19,7 +19,7 @@ return [
       'log'        => [System\Log\Log::class, true],
       'mail'       => System\Mail\Mail::class,
       'pagination' => System\Pagination\Pagination::class,
-      'secure'     => System\Secure\Secure::class,
+      'crypt'      => System\Crypt\Crypt::class,
       'session'    => [System\Session\Session::class, true],
       'similarity' => System\Text\Similarity::class,
       'upload'     => System\Upload\Upload::class,

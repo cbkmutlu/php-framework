@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Modules\Category;
 
-use App\Core\Abstracts\BaseResource;
+use App\Core\Abstracts\Resource;
 
-class CategoryResponse extends BaseResource {
+class CategoryResponse extends Resource {
    public int $id;
    public string $code;
    public string $title;

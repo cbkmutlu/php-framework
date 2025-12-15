@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use System\Migration\Migration;
+use App\Core\Abstracts\Migration;
 
 class product_image extends Migration {
    public function up() {

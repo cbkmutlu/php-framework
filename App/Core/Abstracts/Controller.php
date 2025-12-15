@@ -9,12 +9,16 @@ use System\Http\Request;
 use System\Http\Response;
 use App\Core\Enums\LanguageEnum;
 
-abstract class BaseController {
+abstract class Controller {
    protected Request $request;
    protected Response $response;
    protected View $view;
    protected ?int $lang_id;
 
+
+   /**
+    * language
+    */
    final protected function language(): int {
       if (isset($this->lang_id)) {
          return $this->lang_id;
@@ -26,19 +30,31 @@ abstract class BaseController {
       return $this->lang_id;
    }
 
+   /**
+    * theme
+    */
    final protected function theme(string $theme): self {
       $this->view->theme($theme);
       return $this;
    }
 
+   /**
+    * import
+    */
    final protected function import(string $view, array $data = []): void {
       $this->view->import($view, $data);
    }
 
+   /**
+    * view
+    */
    final protected function view(string $view, array $data = [], int $code = 200): void {
       $this->response->body($this->view->render($view, $data), $code);
    }
 
+   /**
+    * middleware
+    */
    final protected function middleware(array $middlewares = []): void {
       $services = import_config('services.middlewares.custom');
       foreach ($middlewares as $middleware) {
@@ -50,15 +66,7 @@ abstract class BaseController {
    }
 
    /**
-    * Ortak API response handler fonksiyonu.
-    *
-    * Verilen callback fonksiyonunu çalıştırır, başarılı sonuç dönerse HTTP JSON response olarak başarılı mesaj ve sonucu döner.
-    *
-    * @param callable $callback çalıştırılacak işlem/fonksiyon
-    * @param mixed|null $message başarı durumunda dönecek mesaj (string veya başka tür)
-    * @param int $code başarılı durum için HTTP status kodu (varsayılan 200)
-    *
-    * @throws \Throwable hata oluşursa üst katmana fırlatır
+    * response
     */
    final protected function response(callable $callback, mixed $message = null, int $code = 200): void {
       try {

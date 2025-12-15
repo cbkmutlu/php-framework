@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 return [
    'app' => [
-      'migrations' => 'App/Migrations', // App/Modules/*/Migrations
-      'routes'     => 'App/Routes', // App/Modules/*/Routes
+      'migrations' => 'App/Migrations',   // App/Modules/*/Migrations
+      'routes'     => 'App/Routes',       // App/Modules/*/Routes
       'env'        => '.env.local',
       'swagger'    => [
-         'user' => '$argon2id$v=19$m=65536,t=4,p=1$QkFYZS5vLjMyclN0cVJNSA$tqbN14XVvOCV6/zry2tOTpnDpAJNrMLOoE+F4oRprxw', // php cli hash 1234
+         // php cli hash 1234
+         'user' => '$argon2id$v=19$m=65536,t=4,p=1$QkFYZS5vLjMyclN0cVJNSA$tqbN14XVvOCV6/zry2tOTpnDpAJNrMLOoE+F4oRprxw',
       ]
    ],
 
@@ -78,22 +79,22 @@ return [
    ],
 
    'jwt' => [
-      'secret'    => 'TJx+lRD2iNG3t1zugYDK10goO6xWktTpyBCoAOFgNUM=',
+      'secret'    => '57f346f52d7828a0ece45560faba0acb04db656d51369a6228adc3fb668911fd',
       'algorithm' => 'HS256',
       'leeway'    => 0,
       'expire'    => 3600
    ],
 
-   'secure' => [
-      'hash_cost'       => 10,
-      'hash_algorithm'  => PASSWORD_ARGON2ID,
-      'crypt_algorithm' => 'aes-128-cbc',
-      'crypt_phrase'    => 'sha256',
-      'crypt_key'       => '0dCx9f/3gp+ZfxHD9YXmpEBXfSErV8rY7S7I0bf/qA4='
+   'crypt' => [
+      'secret'    => '5600f961b1e548a4097e17a1d36d2e9c6c3066d65d6983d31b7b0eacde545e2d',
+      'cipher'    => 'aes-128-cbc',
+      'phrase'    => 'sha256',
+      'cost'      => 10,
+      'algorithm' => PASSWORD_ARGON2ID
    ],
 
    'session' => [
-      'encryption_key'   => 'u2LMq1h4oUV0ohL9svqedoB5LebiIE4z',
+      'encryption_key'   => '15d677580ffde727ca0d8c4046fbe7ee40f9df6da258d71ac631ab488845f127',
       'cookie_httponly'  => true,
       'use_only_cookies' => true,
       'lifetime'         => 3600,
@@ -102,7 +103,7 @@ return [
    ],
 
    'cookie'      => [
-      'encryption_key'  => 'HXg1wuVjAOxR7AZZz4rGMbfVwN8nTY20',
+      'encryption_key'  => 'c7923454ea96676f419744b3fc2d202fcfee1881847c27debf048c7372020f56',
       'cookie_security' => true,
       'separator'       => '--',
       'httponly'        => true,
@@ -135,15 +136,15 @@ return [
    ],
 
    'upload' => [
-      'path'          => 'Public' . DS . 'upload',
+      'path'          => 'Public/upload',
       'allowed_types' => ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'txt'],
       'allowed_mimes' => ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'text/*']
    ],
 
    'image' => [
-      'path'          => 'Public/upload/image',
-      'quality'       => 100,
-      'background'    => [255, 255, 255, 100]
+      'path'       => 'Public/upload/image',
+      'quality'    => 100,
+      'background' => [255, 255, 255, 100]
    ],
 
    'email' => [
@@ -155,44 +156,44 @@ return [
    ],
 
    'status' => [
-      100 => "HTTP/1.1 100 Continue",
-      101 => "HTTP/1.1 101 Switching Protocols",
-      200 => "HTTP/1.1 200 OK",
-      201 => "HTTP/1.1 201 Created",
-      202 => "HTTP/1.1 202 Accepted",
-      203 => "HTTP/1.1 203 Non-Authoritative Information",
-      204 => "HTTP/1.1 204 No Content",
-      205 => "HTTP/1.1 205 Reset Content",
-      206 => "HTTP/1.1 206 Partial Content",
-      300 => "HTTP/1.1 300 Multiple Choices",
-      301 => "HTTP/1.1 301 Moved Permanently",
-      302 => "HTTP/1.1 302 Found",
-      303 => "HTTP/1.1 303 See Other",
-      304 => "HTTP/1.1 304 Not Modified",
-      305 => "HTTP/1.1 305 Use Proxy",
-      307 => "HTTP/1.1 307 Temporary Redirect",
-      400 => "HTTP/1.1 400 Bad Request",
-      401 => "HTTP/1.1 401 Unauthorized",
-      402 => "HTTP/1.1 402 Payment Required",
-      403 => "HTTP/1.1 403 Forbidden",
-      404 => "HTTP/1.1 404 Not Found",
-      405 => "HTTP/1.1 405 Method Not Allowed",
-      406 => "HTTP/1.1 406 Not Acceptable",
-      407 => "HTTP/1.1 407 Proxy Authentication Required",
-      408 => "HTTP/1.1 408 Request Time-out",
-      409 => "HTTP/1.1 409 Conflict",
-      410 => "HTTP/1.1 410 Gone",
-      411 => "HTTP/1.1 411 Length Required",
-      412 => "HTTP/1.1 412 Precondition Failed",
-      413 => "HTTP/1.1 413 Request Entity Too Large",
-      414 => "HTTP/1.1 414 Request-URI Too Large",
-      415 => "HTTP/1.1 415 Unsupported Media Type",
-      416 => "HTTP/1.1 416 Requested range not satisfiable",
-      417 => "HTTP/1.1 417 Expectation Failed",
-      500 => "HTTP/1.1 500 Internal Server Error",
-      501 => "HTTP/1.1 501 Not Implemented",
-      502 => "HTTP/1.1 502 Bad Gateway",
-      503 => "HTTP/1.1 503 Service Unavailable",
-      504 => "HTTP/1.1 504 Gateway Time-out"
+      100 => 'HTTP/1.1 100 Continue',
+      101 => 'HTTP/1.1 101 Switching Protocols',
+      200 => 'HTTP/1.1 200 OK',
+      201 => 'HTTP/1.1 201 Created',
+      202 => 'HTTP/1.1 202 Accepted',
+      203 => 'HTTP/1.1 203 Non-Authoritative Information',
+      204 => 'HTTP/1.1 204 No Content',
+      205 => 'HTTP/1.1 205 Reset Content',
+      206 => 'HTTP/1.1 206 Partial Content',
+      300 => 'HTTP/1.1 300 Multiple Choices',
+      301 => 'HTTP/1.1 301 Moved Permanently',
+      302 => 'HTTP/1.1 302 Found',
+      303 => 'HTTP/1.1 303 See Other',
+      304 => 'HTTP/1.1 304 Not Modified',
+      305 => 'HTTP/1.1 305 Use Proxy',
+      307 => 'HTTP/1.1 307 Temporary Redirect',
+      400 => 'HTTP/1.1 400 Bad Request',
+      401 => 'HTTP/1.1 401 Unauthorized',
+      402 => 'HTTP/1.1 402 Payment Required',
+      403 => 'HTTP/1.1 403 Forbidden',
+      404 => 'HTTP/1.1 404 Not Found',
+      405 => 'HTTP/1.1 405 Method Not Allowed',
+      406 => 'HTTP/1.1 406 Not Acceptable',
+      407 => 'HTTP/1.1 407 Proxy Authentication Required',
+      408 => 'HTTP/1.1 408 Request Time-out',
+      409 => 'HTTP/1.1 409 Conflict',
+      410 => 'HTTP/1.1 410 Gone',
+      411 => 'HTTP/1.1 411 Length Required',
+      412 => 'HTTP/1.1 412 Precondition Failed',
+      413 => 'HTTP/1.1 413 Request Entity Too Large',
+      414 => 'HTTP/1.1 414 Request-URI Too Large',
+      415 => 'HTTP/1.1 415 Unsupported Media Type',
+      416 => 'HTTP/1.1 416 Requested range not satisfiable',
+      417 => 'HTTP/1.1 417 Expectation Failed',
+      500 => 'HTTP/1.1 500 Internal Server Error',
+      501 => 'HTTP/1.1 501 Not Implemented',
+      502 => 'HTTP/1.1 502 Bad Gateway',
+      503 => 'HTTP/1.1 503 Service Unavailable',
+      504 => 'HTTP/1.1 504 Gateway Time-out'
    ]
 ];

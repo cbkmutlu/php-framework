@@ -17,7 +17,7 @@ class Swagger {
       $this->router->prefix('swagger')->group(function () {
          // swagger index
          $this->router->get('/', function () {
-            require_once ROOT_DIR . '/Public/swagger/index.html';
+            require_once PUBLIC_DIR . 'swagger/index.html';
          });
 
          // swagger list

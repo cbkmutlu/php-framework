@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Product;
 
 use System\Database\Database;
-use App\Core\Abstracts\BaseRepository;
+use App\Core\Abstracts\Repository;
 
-class ProductRepository extends BaseRepository {
+class ProductRepository extends Repository {
    public function __construct(
       protected Database $database,
       protected string $table = 'product'

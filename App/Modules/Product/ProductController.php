@@ -6,7 +6,7 @@ namespace App\Modules\Product;
 
 use System\Http\Request;
 use System\Http\Response;
-use App\Core\Abstracts\BaseController;
+use App\Core\Abstracts\Controller;
 use App\Modules\Product\ProductRequest;
 use App\Modules\Product\ProductService;
 use App\Modules\Product\ProductResponse;
@@ -14,7 +14,7 @@ use App\Modules\Product\ProductResponse;
 /**
  * @OA\Tag(name="Product", description="Ürün işlemleri")
  */
-class ProductController extends BaseController {
+class ProductController extends Controller {
    public function __construct(
       protected Response $response,
       protected Request $request,
@@ -28,14 +28,13 @@ class ProductController extends BaseController {
     *    @OA\Response(response=200, description="Success")
     * )
     */
-   public function getAllProduct() {
+   public function getAll() {
       $this->response(function () {
          $result = $this->service->getAll();
 
          return array_map(function ($item) {
             $response = new ProductResponse();
-            $response->fromArray($item);
-
+            $response->withData($item);
             return $response;
          }, $result);
       });
@@ -47,12 +46,11 @@ class ProductController extends BaseController {
     *    @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer"))
     * )
     */
-   public function getProduct(int $id) {
+   public function getById(int $id) {
       $this->response(function () use ($id) {
          $result = $this->service->getOne($id);
          $response = new ProductResponse();
-         $response->fromArray($result);
-
+         $response->withData($result);
          return $response;
       });
    }
@@ -71,16 +69,15 @@ class ProductController extends BaseController {
     *    ))
     * )
     */
-   public function createProduct() {
+   public function create() {
       $this->response(function () {
          $json = $this->request->json();
          $request = new ProductRequest();
-         $request->fromArray($json);
+         $request->assignData($json);
 
          $result = $this->service->createProduct($request);
          $response = new ProductResponse();
-         $response->fromArray($result);
-
+         $response->withData($result);
          return $response;
       }, code: 201);
    }
@@ -100,16 +97,15 @@ class ProductController extends BaseController {
     *    ))
     * )
     */
-   public function updateProduct() {
+   public function update() {
       $this->response(function () {
          $json = $this->request->json();
          $request = new ProductRequest();
-         $request->fromArray($json);
+         $request->assignData($json);
 
          $result = $this->service->updateProduct($request);
          $response = new ProductResponse();
-         $response->fromArray($result);
-
+         $response->withData($result);
          return $response;
       });
    }
@@ -121,14 +117,9 @@ class ProductController extends BaseController {
     *    @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer"))
     * )
     */
-   public function deleteProduct(int $id) {
+   public function delete(int $id): void {
       $this->response(function () use ($id) {
-         $result = $this->service->delete([
-            'id' => $id,
-            'deleted_at' => ['IS NULL']
-         ]);
-
-         return $result;
+         return $this->service->deleteProduct($id);
       });
    }
 }

@@ -6,7 +6,7 @@ namespace App\Modules\Category;
 
 use System\Http\Request;
 use System\Http\Response;
-use App\Core\Abstracts\BaseController;
+use App\Core\Abstracts\Controller;
 use App\Modules\Category\CategoryRequest;
 use App\Modules\Category\CategoryService;
 use App\Modules\Category\CategoryResponse;
@@ -14,7 +14,7 @@ use App\Modules\Category\CategoryResponse;
 /**
  * @OA\Tag(name="Category", description="Kategori işlemleri")
  */
-class CategoryController extends BaseController {
+class CategoryController extends Controller {
    public function __construct(
       protected Response $response,
       protected Request $request,
@@ -28,14 +28,13 @@ class CategoryController extends BaseController {
     *    @OA\Response(response=200, description="Success")
     * )
     */
-   public function getAllCategory() {
+   public function getAll(): void {
       $this->response(function () {
          $result = $this->service->getAll();
 
          return array_map(function ($item) {
             $response = new CategoryResponse();
-            $response->fromArray($item);
-
+            $response->withData($item);
             return $response;
          }, $result);
       });
@@ -47,12 +46,11 @@ class CategoryController extends BaseController {
     *    @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer"))
     * )
     */
-   public function getCategoryById(int $id) {
+   public function getById(int $id): void {
       $this->response(function () use ($id) {
          $result = $this->service->getOne($id);
          $response = new CategoryResponse();
-         $response->fromArray($result);
-
+         $response->withData($result);
          return $response;
       });
    }
@@ -71,16 +69,15 @@ class CategoryController extends BaseController {
     *    ))
     * )
     */
-   public function createCategory() {
+   public function create(): void {
       $this->response(function () {
          $json = $this->request->json();
          $request = new CategoryRequest();
-         $request->fromArray($json);
+         $request->assignData($json);
 
          $result = $this->service->createCategory($request);
          $response = new CategoryResponse();
-         $response->fromArray($result);
-
+         $response->withData($result);
          return $response;
       }, code: 201);
    }
@@ -100,16 +97,15 @@ class CategoryController extends BaseController {
     *    ))
     * )
     */
-   public function updateCategory() {
-      return $this->response(function () {
+   public function update(): void {
+      $this->response(function () {
          $json = $this->request->json();
          $request = new CategoryRequest();
-         $request->fromArray($json);
+         $request->assignData($json);
 
          $result = $this->service->updateCategory($request);
          $response = new CategoryResponse();
-         $response->fromArray($result);
-
+         $response->withData($result);
          return $response;
       });
    }
@@ -121,14 +117,63 @@ class CategoryController extends BaseController {
     *    @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer"))
     * )
     */
-   public function deleteCategory(int $id) {
+   public function delete(int $id): void {
       $this->response(function () use ($id) {
-         $result = $this->service->delete([
-            'id' => $id,
-            'deleted_at' => ['IS NULL']
-         ]);
+         return $this->service->deleteCategory($id);
+      });
+   }
 
-         return $result;
+   /**
+    * @OA\Put(tags={"Category"}, path="/category/order", summary="Kategori sıralamasını toplu güncelle",
+    *    @OA\Response(response=200, description="Success"),
+    *    @OA\RequestBody(required=true, @OA\JsonContent(type="array",
+    *       @OA\Items(required={"id", "order"},
+    *          @OA\Property(property="id", type="integer", example=1),
+    *          @OA\Property(property="order", type="integer", example=1)
+    *       )
+    *    ))
+    * )
+    */
+   public function updateOrder(): void {
+      $this->response(function () {
+         $json = $this->request->json();
+         $result = $this->service->updateOrder($json);
+
+         return array_map(function ($item) {
+            $response = new CategoryResponse();
+            $response->withData($item);
+            return $response;
+         }, $result);
+      });
+   }
+
+   /**
+    * @OA\Post(tags={"Category"}, path="/category/image", summary="Kategori resmini yükle",
+    *    @OA\Response(response=201, description="Success"),
+    *    @OA\RequestBody(required=true, @OA\MediaType(mediaType="multipart/form-data",
+    *       @OA\Schema(required={"files[]"},
+    *          @OA\Property(property="files[]", type="array", @OA\Items(type="string", format="binary"))
+    *       )
+    *    ))
+    * )
+    */
+   public function uploadImage(): void {
+      $this->response(function () {
+         $files = $this->request->files();
+         return $this->service->uploadImage($files);
+      });
+   }
+
+   /**
+    * @OA\Delete(
+    *    tags={"Category"}, path="/category/image/{id}", summary="Kategori resmini sil",
+    *    @OA\Response(response=200, description="Success"),
+    *    @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer"))
+    * )
+    */
+   public function deleteImage(int $id): void {
+      $this->response(function () use ($id) {
+         return $this->service->deleteImage($id);
       });
    }
 }

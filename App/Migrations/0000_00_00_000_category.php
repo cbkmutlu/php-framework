@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use System\Migration\Migration;
+use App\Core\Abstracts\Migration;
 
 class category extends Migration {
    public function up() {
@@ -17,13 +17,16 @@ class category extends Migration {
          {$this->defaults()}
       )");
 
-      $this->database->table('category')->insert([
-         'code' => 'CAT001',
-         'title' => 'Kategori Başlığı',
-         'content' => 'Kategori Açıklaması',
-         'is_active' => 1,
-         'sort_order' => 1
-      ])->prepare()->execute();
+      $this->database->table('category')
+         ->insert([
+            'code' => ['CAT001'],
+            'title' => ['Kategori Başlığı'],
+            'content' => ['Kategori Açıklaması'],
+            'is_active' => [1],
+            'sort_order' => [1]
+         ])
+         ->prepare()
+         ->execute();
    }
 
    public function down() {
