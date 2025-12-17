@@ -14,38 +14,54 @@ class ProductRepository extends Repository {
    ) {
    }
 
-   public function findCategory(int $product_id): array {
+   public function findAllCategory(int $productId): array {
       return $this->database
-         ->prepare('SELECT
-               category.id,
-               category.title
-            FROM product_category
-
-            JOIN category ON category.id = product_category.category_id
-               AND category.deleted_at IS NULL
-            WHERE product_category.product_id = :product_id
-         ')
+         ->prepare("SELECT c.*, tr.* FROM product_category pc
+            JOIN category c ON c.id = pc.category_id
+               AND c.deleted_at IS NULL
+            LEFT JOIN category_translate tr ON tr.category_id = c.id
+               AND tr.language_id = 1
+            WHERE pc.product_id = :product_id
+         ")
          ->execute([
-            'product_id' => $product_id,
+            'product_id' => $productId,
          ])
          ->fetchAll();
    }
 
-   public function findImage(int $product_id): array {
+   public function findAllImage(int $productId): array {
       return $this->database
-         ->prepare('SELECT
-               product_image.id,
-               product_image.product_id,
-               product_image.image_path
-            FROM product_image
-            WHERE product_image.deleted_at IS NULL
-               AND product_image.image_path IS NOT NULL
-               AND product_image.product_id = :product_id
-            ORDER BY product_image.sort_order ASC, product_image.created_at ASC
-         ')
+         ->prepare("SELECT pi.* FROM product_image pi
+            WHERE pi.image_path IS NOT NULL
+               AND pi.product_id = :product_id
+            ORDER BY pi.sort_order ASC
+         ")
          ->execute([
-            'product_id' => $product_id,
+            'product_id' => $productId,
          ])
          ->fetchAll();
+   }
+
+   public function findOneImage(int $imageId): array|false {
+      return $this->database
+         ->prepare("SELECT pi.* FROM product_image pi
+            WHERE pi.image_path IS NOT NULL
+               AND pi.id = :image_id
+         ")
+         ->execute([
+            'image_id' => $imageId,
+         ])
+         ->fetch();
+   }
+
+   public function findOneBrand(int $brandId): array|false {
+      return $this->database
+         ->prepare("SELECT b.* FROM brand b
+            WHERE b.id = :brand_id
+         ")
+         ->execute([
+            'brand_id' => $brandId,
+         ])
+         ->fetch();
    }
 }

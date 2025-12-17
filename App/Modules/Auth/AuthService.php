@@ -29,9 +29,9 @@ class AuthService extends Service {
       AuthRepository $repository
    ) {
       $this->repository = $repository;
-      $config = import_config('defines.jwt');
-      $this->accessTokenExpire = $config['expire']['access'];
-      $this->refreshTokenExpire = $config['expire']['refresh'];
+      $expire = import_config('defines.jwt.expire');
+      $this->accessTokenExpire = $expire['access'];
+      $this->refreshTokenExpire = $expire['refresh'];
    }
 
    /**
@@ -63,27 +63,31 @@ class AuthService extends Service {
    /**
     * User logout
     */
-   public function logout(string $refreshToken): void {
+   public function logout(string $refreshToken): bool {
       $hash = hash('sha256', $refreshToken);
       $token = $this->repository->findTokenByHash($hash);
 
       if (!$token) {
-         return;
+         return false;
       }
 
       $this->revokeRefreshToken($token['id']);
+
+      return true;
    }
 
    /**
     * User logout all
     */
-   public function logoutAll(int $userId): void {
-      $this->repository->update([
+   public function logoutAll(int $userId): bool {
+      $result = $this->repository->update([
          'revoked_at' => ['NOW(3)']
       ], [
          'user_id' => $userId,
          'revoked_at' => ['IS NULL']
       ], 'api_user_token');
+
+      return $result->affectedRows() > 0;
    }
 
    /**

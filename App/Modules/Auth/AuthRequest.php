@@ -9,11 +9,4 @@ use App\Core\Abstracts\Resource;
 class AuthRequest extends Resource {
    public string $email;
    public string $password;
-
-   public function rules(): array {
-      return [
-         'email'    => ['required', 'email'],
-         'password' => ['required']
-      ];
-   }
 }

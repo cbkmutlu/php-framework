@@ -35,11 +35,10 @@ class AuthController extends Controller {
          $json = $this->request->json();
          $this->service->validate($json, [
             'email'    => ['required', 'email'],
-            'password' => ['required', 'string']
+            'password' => ['required']
          ]);
 
-         $result = $this->service->login($json['email'], $json['password']);
-         return $result;
+         return $this->service->login($json['email'], $json['password']);
       });
    }
 
@@ -48,7 +47,7 @@ class AuthController extends Controller {
     *    @OA\Response(response=201, description="Success"),
     *    @OA\RequestBody(required=true, @OA\JsonContent(
     *       required={"token"},
-    *       @OA\Property(property="token", type="string", example="access_token")
+    *       @OA\Property(property="token", type="string", example="refresh_token")
     *    ))
     * )
     */
@@ -59,8 +58,7 @@ class AuthController extends Controller {
             'token' => ['required', 'string']
          ]);
 
-         $this->service->logout($json['token']);
-         return true;
+         return $this->service->logout($json['token']);
       });
    }
 
@@ -80,8 +78,7 @@ class AuthController extends Controller {
             'user_id' => ['required', 'integer']
          ]);
 
-         $this->service->logoutAll($json['user_id']);
-         return true;
+         return $this->service->logoutAll($json['user_id']);
       });
    }
 
@@ -101,8 +98,7 @@ class AuthController extends Controller {
             'token' => ['required', 'string']
          ]);
 
-         $result = $this->service->refresh($json['token']);
-         return $result;
+         return $this->service->refresh($json['token']);
       });
    }
 }

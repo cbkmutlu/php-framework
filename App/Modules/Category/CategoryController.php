@@ -25,33 +25,33 @@ class CategoryController extends Controller {
    /**
     * @OA\Get(
     *    tags={"Category"}, path="/category/", summary="Kategori listesi",
-    *    @OA\Response(response=200, description="Success")
+    *    @OA\Response(response=200, description="Success"),
+    *    @OA\Parameter(name="lang", in="query", required=false, @OA\Schema(type="integer"))
     * )
     */
    public function getAll(): void {
       $this->response(function () {
-         $result = $this->service->getAll();
+         $result = $this->service->getAll($this->params('language_id'));
 
          return array_map(function ($item) {
             $response = new CategoryResponse();
-            $response->withData($item);
-            return $response;
+            return $response->withData($item);
          }, $result);
       });
    }
 
    /**
-    * @OA\Get(tags={"Category"}, path="/category/{id}", summary="Kategori detayı (ID'ye göre)",
+    * @OA\Get(tags={"Category"}, path="/category/{id}", summary="Kategori detayı (id'ye göre)",
     *    @OA\Response(response=200, description="Success"),
-    *    @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer"))
+    *    @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+    *    @OA\Parameter(name="lang", in="query", required=false, @OA\Schema(type="integer"))
     * )
     */
-   public function getById(int $id): void {
-      $this->response(function () use ($id) {
-         $result = $this->service->getOne($id);
+   public function getById(int $categoryId): void {
+      $this->response(function () use ($categoryId) {
+         $result = $this->service->getOne($categoryId, $this->params('language_id'));
          $response = new CategoryResponse();
-         $response->withData($result);
-         return $response;
+         return $response->withData($result);
       });
    }
 
@@ -75,10 +75,9 @@ class CategoryController extends Controller {
          $request = new CategoryRequest();
          $request->assignData($json);
 
-         $result = $this->service->createCategory($request);
+         $result = $this->service->createCategory($request, $this->params('language_id'));
          $response = new CategoryResponse();
-         $response->withData($result);
-         return $response;
+         return $response->withData($result);
       }, code: 201);
    }
 
@@ -103,10 +102,9 @@ class CategoryController extends Controller {
          $request = new CategoryRequest();
          $request->assignData($json);
 
-         $result = $this->service->updateCategory($request);
+         $result = $this->service->updateCategory($request, $this->params('language_id'));
          $response = new CategoryResponse();
-         $response->withData($result);
-         return $response;
+         return $response->withData($result);
       });
    }
 
@@ -117,9 +115,9 @@ class CategoryController extends Controller {
     *    @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer"))
     * )
     */
-   public function delete(int $id): void {
-      $this->response(function () use ($id) {
-         return $this->service->deleteCategory($id);
+   public function delete(int $categoryId): void {
+      $this->response(function () use ($categoryId) {
+         return $this->service->deleteCategory($categoryId);
       });
    }
 
@@ -141,32 +139,31 @@ class CategoryController extends Controller {
 
          return array_map(function ($item) {
             $response = new CategoryResponse();
-            $response->withData($item);
-            return $response;
+            return $response->withData($item);
          }, $result);
       });
    }
 
    /**
-    * @OA\Post(tags={"Category"}, path="/category/image", summary="Kategori resmini yükle",
+    * @OA\Post(tags={"Category"}, path="/category/image", summary="Kategori resmini yükle (tek resim)",
     *    @OA\Response(response=201, description="Success"),
     *    @OA\RequestBody(required=true, @OA\MediaType(mediaType="multipart/form-data",
-    *       @OA\Schema(required={"files[]"},
-    *          @OA\Property(property="files[]", type="array", @OA\Items(type="string", format="binary"))
+    *       @OA\Schema(required={"files"},
+    *          @OA\Property(property="files", type="string", format="binary")
     *       )
     *    ))
     * )
     */
    public function uploadImage(): void {
       $this->response(function () {
-         $files = $this->request->files();
+         $files = $this->request->files('files');
          return $this->service->uploadImage($files);
       });
    }
 
    /**
     * @OA\Delete(
-    *    tags={"Category"}, path="/category/image/{id}", summary="Kategori resmini sil",
+    *    tags={"Category"}, path="/category/{id}/image", summary="Kategori resmini sil",
     *    @OA\Response(response=200, description="Success"),
     *    @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer"))
     * )

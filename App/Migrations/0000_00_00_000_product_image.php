@@ -10,8 +10,7 @@ class product_image extends Migration {
          `id` INT AUTO_INCREMENT PRIMARY KEY,
          `product_id` INT NOT NULL DEFAULT 0,
          `image_path` VARCHAR(512) NULL DEFAULT NULL,
-         `sort_order` INT NOT NULL DEFAULT 0,
-         {$this->defaults()}
+         `sort_order` INT NOT NULL DEFAULT 0
       )");
    }
 

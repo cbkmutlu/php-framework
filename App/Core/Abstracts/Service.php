@@ -16,10 +16,6 @@ abstract class Service {
    /** @var Repository */
    protected mixed $repository;
 
-   public function __construct() {
-      $this->validation = new Validation();
-   }
-
    /**
     * Kayıt kontrolü yapar.
     *
@@ -74,24 +70,30 @@ abstract class Service {
     * Her bir dil için verilen veriye göre `language_id` ve `id` ile kayıt aranır.
     * Eğer kayıt varsa güncellenir, yoksa yeni bir çeviri olarak eklenir.
     *
-    * @param array $fields ilişkili veriler `['product_id' => '...']` gibi olmalıdır
-    * @param array $langs `[['language_id' => 1, 'id' => 5, 'title' => '...'], ...]`
+    * @param array $fields güncellenecek alanlar `['title', 'content']` gibi olmalıdır
+    * @param array $where ilişkili veriler `['category_id' => '...']` gibi olmalıdır
+    * @param array $translations `[['language_id' => 1, 'title' => '...'], ...]`
     * @param string $table çeviri tablosu adı
     *
     * @throws SystemException güncellenemez veya oluşturulamazsa 400 hatası fırlatır
     */
-   final protected function translate(array $fields, array $langs, string $table_translate): void {
-      foreach ($langs as $lang) {
-         $lang_id = $lang['language_id'];
-         unset($lang['language_id']);
-         $where = array_merge($fields, [
-            'language_id' => $lang_id
+   final protected function translate(array $fields, array $where, array $translations, string $table): void {
+      foreach ($translations as $item) {
+         if (!isset($item['language_id'])) {
+            throw new SystemException('Language id is required', 400);
+         }
+
+         $langId  = $item['language_id'];
+         $filter = array_intersect_key($item, array_flip($fields));
+         unset($item['language_id']);
+         $where = array_merge($where, [
+            'language_id' => $langId
          ]);
 
-         if ($this->repository->findBy($where, $table_translate)) {
-            $result = $this->repository->update($lang, $where, $table_translate);
+         if ($this->repository->findBy($where, $table)) {
+            $result = $this->repository->update($filter, $where, $table);
          } else {
-            $result = $this->repository->create(array_merge($where, $lang), $table_translate);
+            $result = $this->repository->create(array_merge($where, $filter), $table);
          }
 
          if ($result->affectedRows() <= 0) {
@@ -109,37 +111,39 @@ abstract class Service {
     * @return array yüklenen dosyaların sunucudaki tam yollarını içeren dizi
     * @throws SystemException yükleme başarısız olursa 400 hatası fırlatır
     */
-   final protected function upload(array $files, string $path): array {
-      if (empty($files)) {
+   final protected function upload(?array $files, string $path): array {
+      if (empty($files) || !isset($files['name'])) {
          return [];
       }
 
       $result = [];
       $this->upload->setPath('Public/upload/' . $path);
 
-      foreach ($files as $file) {
-         $list = $file['name'];
-         $tmp = $file['tmp_name'];
-         $type = $file['type'];
-         $error = $file['error'];
-         $size = $file['size'];
+      if (!is_array($files['name'])) {
+         $files = [
+            'name'      => [$files['name']],
+            'tmp_name'  => [$files['tmp_name']],
+            'type'      => [$files['type']],
+            'error'     => [$files['error']],
+            'size'      => [$files['size']],
+         ];
+      }
 
-         foreach ($list as $i => $name) {
-            $finalName = bin2hex(random_bytes(8)) . '-' . $name;
-            $fullPath = str_replace('\\', '/', $this->upload->getPath() . '/' . $finalName);
+      foreach ($files['name'] as $i => $name) {
+         $finalName = bin2hex(random_bytes(8)) . '-' . $name;
+         $fullPath  = str_replace('\\', '/', $this->upload->getPath() . '/' . $finalName);
 
-            if (!$this->upload->handle([
-               'name' => $name,
-               'tmp_name' => $tmp[$i],
-               'type' => $type[$i],
-               'error' => $error[$i],
-               'size' => $size[$i]
-            ], $finalName)) {
-               throw new SystemException(json_encode($this->upload->error()), 400);
-            }
-
-            $result[] = $fullPath;
+         if (!$this->upload->handle([
+            'name'     => $name,
+            'tmp_name' => $files['tmp_name'][$i],
+            'type'     => $files['type'][$i],
+            'error'    => $files['error'][$i],
+            'size'     => $files['size'][$i],
+         ], $finalName)) {
+            throw new SystemException(json_encode($this->upload->error()), 400);
          }
+
+         $result[] = $fullPath;
       }
 
       return $result;

@@ -24,15 +24,15 @@ class CategoryService extends Service {
    /**
     * getAll
     */
-   public function getAll(): array {
-      return $this->repository->findAll();
+   public function getAll(int $lang_id): array {
+      return $this->repository->findAll($lang_id);
    }
 
    /**
     * getOne
     */
-   public function getOne(int $id): array {
-      $result = $this->repository->findOne($id);
+   public function getOne(int $categoryId, int $lang_id): array {
+      $result = $this->repository->findOne($categoryId, $lang_id);
 
       if (empty($result)) {
          throw new SystemException('Record not found', 404);
@@ -44,8 +44,8 @@ class CategoryService extends Service {
    /**
     * create
     */
-   public function createCategory(CategoryRequest $request): array {
-      return $this->repository->transaction(function () use ($request): array {
+   public function createCategory(CategoryRequest $request, int $lang_id): array {
+      return $this->repository->transaction(function () use ($request, $lang_id): array {
          try {
             // check
             $this->checkFields($request);
@@ -53,14 +53,12 @@ class CategoryService extends Service {
             // create
             $create = $this->repository->create([
                'code'       => $request->code,
-               'title'      => $request->title,
-               'content'    => $request->content,
-               'image_path' => $request->image_path,
                'is_active'  => $request->is_active,
-               'sort_order' => $request->sort_order
+               'sort_order' => $request->sort_order,
+               'image_path' => $request->image_path
             ]);
 
-            return $this->getOne($create->lastInsertId());
+            return $this->getOne($create->lastInsertId(), $lang_id);
          } catch (SystemException $e) {
             // unlink image
             if (isset($request->image_path)) {
@@ -75,24 +73,22 @@ class CategoryService extends Service {
    /**
     * update
     */
-   public function updateCategory(CategoryRequest $request): array {
-      return $this->repository->transaction(function () use ($request): array {
+   public function updateCategory(CategoryRequest $request, int $lang_id): array {
+      return $this->repository->transaction(function () use ($request, $lang_id): array {
          try {
             // check
             $this->checkFields($request, false);
 
-            // find image
-            $category = $this->repository->findOne($request->id);
-            $image = $category['image_path'] ?? null;
+            // get item and find image field
+            $category = $this->getOne($request->id, $lang_id);
+            $imagePath = $category['image_path'] ?? null;
 
             // filter list
             $update = $request->filterArray([
                'code'       => $request->code,
-               'title'      => $request->title,
-               'content'    => $request->content,
-               'image_path' => $request->image_path,
                'is_active'  => $request->is_active,
-               'sort_order' => $request->sort_order
+               'sort_order' => $request->sort_order,
+               'image_path' => $request->image_path
             ]);
 
             // update category
@@ -100,12 +96,17 @@ class CategoryService extends Service {
                'id' => $request->id
             ]);
 
+            // update translate
+            $this->translate(['title', 'content'], [
+               'category_id' => $request->id
+            ], $request->translate, 'category_translate');
+
             // unlink old image
             if (isset($request->image_path)) {
-               $this->unlink($image);
+               $this->unlink($imagePath);
             }
 
-            return $this->getOne($request->id);
+            return $this->getOne($request->id, $lang_id);
          } catch (SystemException $e) {
             // unlink request image if error
             if (isset($request->image_path)) {
@@ -120,20 +121,29 @@ class CategoryService extends Service {
    /**
     * delete
     */
-   public function deleteCategory(int $id): bool {
-      return $this->repository->transaction(function () use ($id): bool {
-         // find image
-         $image = $this->repository->findOne($id)['image_path'] ?? null;
+   public function deleteCategory(int $categoryId): bool {
+      return $this->repository->transaction(function () use ($categoryId): bool {
+         // get item and find image field
+         $category = $this->getOne($categoryId, 1);
+         $imagePath = $category['image_path'] ?? null;
+
+         // check relation with product
+         $relation = $this->repository->findBy([
+            'category_id' => $categoryId
+         ], 'product_category');
+         if ($relation) {
+            throw new SystemException('Category is related with product', 400);
+         }
 
          // delete category
          $this->repository->softDelete([
-            'id'         => $id,
+            'id'         => $categoryId,
             'deleted_at' => ['IS NULL']
          ]);
 
          // unlink image
-         if (isset($image)) {
-            return $this->unlink($image);
+         if (isset($imagePath)) {
+            return $this->unlink($imagePath);
          }
 
          return true;
@@ -160,7 +170,7 @@ class CategoryService extends Service {
             'id' => ['IN', array_column($fields, 'id')]
          ]);
 
-         return $this->repository->findAll([
+         return $this->repository->findAllBy([
             'id' => ['IN', array_column($fields, 'id')]
          ]);
       });
@@ -169,28 +179,29 @@ class CategoryService extends Service {
    /**
     * upload image
     */
-   public function uploadImage(array $files): array {
+   public function uploadImage(?array $files): array {
       return $this->upload($files, 'category');
    }
 
    /**
     * delete image
     */
-   public function deleteImage(int $id): bool {
-      return $this->repository->transaction(function () use ($id): bool {
-         // find image
-         $image = $this->repository->findOne($id)['image_path'] ?? null;
+   public function deleteImage(int $categoryId): bool {
+      return $this->repository->transaction(function () use ($categoryId): bool {
+         // get item and find image field
+         $category = $this->getOne($categoryId, 1);
+         $imagePath = $category['image_path'] ?? null;
 
          // update field to null
          $this->repository->update([
             'image_path' => null
          ], [
-            'id' => $id
+            'id' => $categoryId
          ]);
 
          // unlink image
-         if (isset($image)) {
-            return $this->unlink($image);
+         if (isset($imagePath)) {
+            return $this->unlink($imagePath);
          }
 
          return true;
@@ -202,7 +213,7 @@ class CategoryService extends Service {
     */
    private function checkFields(CategoryRequest $request, bool $create = true): void {
       $this->check([
-         'code' => $request->code
+         'code' => $request->code,
       ], $request, $create);
    }
 }

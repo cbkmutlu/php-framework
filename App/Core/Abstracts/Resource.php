@@ -9,7 +9,7 @@ use System\Validation\Validation;
 use App\Core\Abstracts\Collection;
 use System\Exception\SystemException;
 
-abstract class Resource {
+trait AuditTrait {
    private array $keys;
    public ?string $created_at;
    public ?int $created_by;
@@ -17,8 +17,11 @@ abstract class Resource {
    public ?int $deleted_by;
    public ?string $updated_at;
    public ?int $updated_by;
+}
 
-   protected Validation $validation;
+abstract class Resource {
+   private array $keys;
+   private Validation $validation;
 
    public function __construct() {
       $this->validation = new Validation();
@@ -57,9 +60,10 @@ abstract class Resource {
     *
     * @param array $data özelliklerine değer atanacak veri dizisi
     */
-   final public function withData(array $data): void {
+   final public function withData(array $data): self {
       $this->keys = [];
-      $reflection = new \ReflectionClass(static::class);
+      $reflection = new ReflectionClass(static::class);
+
       foreach ($reflection->getProperties() as $property) {
          $prop = $property->getName();
          if (!array_key_exists($prop, $data)) {
@@ -67,25 +71,32 @@ abstract class Resource {
          }
          $value = $data[$prop];
          $type = $property->getType();
+         $name = $property->getType()->getName();
 
-         if ($type && $type->getName() === Collection::class && is_array($value)) {
+         if ($type && $name === Collection::class && is_array($value)) {
             $collection = $this->$prop;
             $collection->setItem($value);
             $this->keys[] = $prop;
             continue;
          }
 
-         if ($type && is_subclass_of($className = $type->getName(), Resource::class) && is_array($value)) {
-            $obj = new $className();
+         if ($type && is_subclass_of($name, Resource::class) && is_array($value)) {
+            $obj = new $name();
             $obj->withData($data[$prop]);
             $this->$prop = $obj;
             $this->keys[] = $prop;
             continue;
          }
 
+         if ($name === 'float') {
+            $value = (float) $value;
+         }
+
          $this->$prop = $value;
          $this->keys[] = $prop;
       }
+
+      return $this;
    }
 
    /**

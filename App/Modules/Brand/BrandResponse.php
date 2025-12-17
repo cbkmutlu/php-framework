@@ -2,19 +2,17 @@
 
 declare(strict_types=1);
 
-namespace App\Modules\Category;
+namespace App\Modules\Brand;
 
 use App\Core\Abstracts\Resource;
 use App\Core\Abstracts\AuditTrait;
 
-class CategoryResponse extends Resource {
+class BrandResponse extends Resource {
    use AuditTrait;
 
    public int $id;
-   public string $code;
    public string $title;
    public ?string $content;
-   public ?string $image_path;
    public int $is_active;
    public int $sort_order;
 }

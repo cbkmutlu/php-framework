@@ -13,7 +13,19 @@ abstract class Repository {
    /**
     * findAll
     */
-   public function findAll(?array $where = [], ?array $orderBy = null): array {
+   public function findAll(): array {
+      return $this->database
+         ->table($this->table)
+         ->select()
+         ->where([
+            'deleted_at' => ['IS NULL']
+         ])
+         ->prepare()
+         ->execute()
+         ->fetchAll();
+   }
+
+   public function findAllBy(?array $where = [], ?array $orderBy = null): array {
       return $this->database
          ->table($this->table)
          ->select()
@@ -72,15 +84,6 @@ abstract class Repository {
     * update
     */
    public function update(array $fields, array $where, ?string $table = null): Database {
-      return $this->database
-         ->table($table ?? $this->table)
-         ->update($fields)
-         ->where($where)
-         ->prepare()
-         ->execute(array_merge($fields, $where));
-   }
-
-   public function update2(array $fields, array $where, ?string $table = null): Database {
       return $this->database
          ->table($table ?? $this->table)
          ->update($fields)

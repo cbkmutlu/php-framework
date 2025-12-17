@@ -6,7 +6,6 @@ namespace App\Modules\File;
 
 use System\Upload\Upload;
 use App\Core\Abstracts\Service;
-use System\Validation\Validation;
 use App\Modules\File\FileRepository;
 use System\Exception\SystemException;
 
@@ -16,7 +15,6 @@ class FileService extends Service {
 
    public function __construct(
       protected Upload $upload,
-      protected Validation $validation,
       FileRepository $repository
    ) {
       $this->repository = $repository;

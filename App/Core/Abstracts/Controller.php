@@ -7,27 +7,22 @@ namespace App\Core\Abstracts;
 use System\View\View;
 use System\Http\Request;
 use System\Http\Response;
-use App\Core\Enums\LanguageEnum;
 
 abstract class Controller {
    protected Request $request;
    protected Response $response;
    protected View $view;
-   protected ?int $lang_id;
-
 
    /**
-    * language
+    * params
     */
-   final protected function language(): int {
-      if (isset($this->lang_id)) {
-         return $this->lang_id;
-      }
+   final protected function params(?string $param = null): array|int|string {
+      $result = [
+         'language_id' => filter_var($this->request->get('lang'), FILTER_VALIDATE_INT) ?: 1,
+         'currency_id' => filter_var($this->request->get('curr'), FILTER_VALIDATE_INT) ?: 1
+      ];
 
-      $config = import_config('defines.language');
-      $this->lang_id = (int) ($this->request->get('lang_id') ?? LanguageEnum::resolve($config['default']));
-
-      return $this->lang_id;
+      return $result[$param] ?? $result;
    }
 
    /**
