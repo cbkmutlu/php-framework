@@ -10,14 +10,9 @@ return [
       'swagger'    => [
          // php cli hash 1234
          'user' => '$argon2id$v=19$m=65536,t=4,p=1$QkFYZS5vLjMyclN0cVJNSA$tqbN14XVvOCV6/zry2tOTpnDpAJNrMLOoE+F4oRprxw',
+         // php cli hash test
+         'test' => '$argon2id$v=19$m=65536,t=4,p=1$bmlCNXJUQTk4MzlvV0tyeg$Y87Nshno7UR19HKlnbAflVIqS3A7ft7pFj9igEWCZ6U'
       ]
-   ],
-
-   'header' => [
-      'allow-origin'      => '*',
-      'allow-headers'     => 'Cache-Control, Pragma, Origin, Content-Type, Authorization, X-Requested-With',
-      'allow-methods'     => 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-      'allow-credentials' => false
    ],
 
    'language' => [
@@ -78,6 +73,23 @@ return [
       ]
    ],
 
+   'header' => [
+      'allow-origin'      => '*',
+      'allow-headers'     => 'Cache-Control, Pragma, Origin, Content-Type, Authorization, X-Requested-With',
+      'allow-methods'     => 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+      'allow-credentials' => false
+   ],
+
+   'middlewares' => [
+      App\Core\Middlewares\Security::class
+   ],
+
+   'listeners' => [
+      'sampleEvent' => [
+         App\Core\Listeners\SampleListener::class
+      ]
+   ],
+
    'jwt' => [
       'secret'    => '57f346f52d7828a0ece45560faba0acb04db656d51369a6228adc3fb668911fd',
       'algorithm' => 'HS256',
@@ -85,6 +97,26 @@ return [
       'expire'    => [
          'access'  => 3600,    // 1 hour in seconds
          'refresh' => 5184000  // 60 days in seconds
+      ]
+   ],
+
+   'rate_limit' => [
+      'max_attempts'  => 10,     // maximum number of requests per minute
+      'decay_minutes' => 5,      // reset time (minutes)
+      'enabled'       => true,   // rate limiting enabled/disabled
+      'whitelist'     => [
+         '127.0.0.1',
+         '::1'
+      ],
+      'custom_limits' => [
+         '/v1/auth/login' => [
+            'max_attempts'  => 10,
+            'decay_minutes' => 5
+         ],
+         '/v1/auth/register' => [
+            'max_attempts'  => 5,
+            'decay_minutes' => 5
+         ]
       ]
    ],
 
@@ -126,7 +158,7 @@ return [
 
    'cache' => [
       'path'      => 'Storage/Cache',
-      'filename'  => 'default-cache',
+      'namespace' => 'app',
       'extension' => '.cache',
       'expire'    => 604800
    ],
@@ -140,8 +172,29 @@ return [
 
    'upload' => [
       'path'          => 'Public/upload',
+      'adapter'       => App\Core\Adapters\UploadLocalAdapter::class,
       'allowed_types' => ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'txt'],
       'allowed_mimes' => ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'text/*']
+   ],
+
+   'storage' => [
+      'cloudflare' => [
+         'account_id' => getenv('CF_ACCOUNT_ID'),
+         'access_key_id' => getenv('CF_ACCESS_KEY_ID'),
+         'access_key_secret' => getenv('CF_ACCESS_KEY_SECRET'),
+         'bucket_name' => getenv('CF_BUCKET_NAME'),
+         'endpoint' => getenv('CF_ENDPOINT'),
+         'public_dev_url' => getenv('CF_PUBLIC_DEV_URL'),
+         'cdn_url' => getenv('CDN_URL') ?: null
+      ],
+      'aws' => [
+         'key' => '',
+         'secret' => '',
+         'region' => '',
+         'bucket' => '',
+         'endpoint' => '',
+         'cdn_url' => ''
+      ]
    ],
 
    'image' => [
@@ -156,6 +209,31 @@ return [
       'username' => '',
       'userpass' => '',
       'charset'  => 'utf-8'
+   ],
+
+   'providers' => [
+      'benchmark'  => System\Benchmark\Benchmark::class,
+      'cache'      => [System\Cache\Cache::class, true],
+      'cookie'     => System\Cookie\Cookie::class,
+      'curl'       => System\Curl\Curl::class,
+      'database'   => [System\Database\Database::class, true],
+      'date'       => System\Date\Date::class,
+      'event'      => System\Event\Event::class,
+      'request'    => [System\Http\Request::class, true],
+      'response'   => [System\Http\Response::class, true],
+      'image'      => System\Image\Image::class,
+      'jwt'        => System\Jwt\Jwt::class,
+      'language'   => [System\Language\Language::class, true],
+      'log'        => [System\Log\Log::class, true],
+      'mail'       => System\Mail\Mail::class,
+      'pagination' => System\Pagination\Pagination::class,
+      'crypt'      => System\Crypt\Crypt::class,
+      'session'    => [System\Session\Session::class, true],
+      'similarity' => System\Text\Similarity::class,
+      'upload'     => System\Upload\Upload::class,
+      'validation' => System\Validation\Validation::class,
+      'view'       => System\View\View::class,
+      'error'      => System\Exception\ExceptionHandler::class
    ],
 
    'status' => [
