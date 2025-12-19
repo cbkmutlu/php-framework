@@ -4,3 +4,5 @@ migration.json
 
 vendor
 Public/upload
+App/Storage/Cache
+App/Storage/Logs
