@@ -48,19 +48,6 @@ abstract class Controller {
    }
 
    /**
-    * middleware
-    */
-   final protected function middleware(array $middlewares = []): void {
-      $services = import_config('services.middlewares.custom');
-      foreach ($middlewares as $middleware) {
-         $middleware = ucfirst($middleware);
-         if (isset($services[$middleware]) && class_exists($services[$middleware])) {
-            call_user_func_array([new $services[$middleware], 'handle'], []);
-         }
-      }
-   }
-
-   /**
     * response
     */
    final protected function response(callable $callback, mixed $message = null, int $code = 200): void {
