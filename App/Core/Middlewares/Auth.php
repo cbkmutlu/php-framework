@@ -23,7 +23,7 @@ class Auth {
 
       $token = $this->request->bearer();
       $decode = $this->jwt->parseToken($token);
-      $this->request->user($decode);
+      $this->request->setUser($decode);
       return $next();
    }
 }
