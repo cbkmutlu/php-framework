@@ -106,82 +106,33 @@ abstract class Service {
     * Dosyalar yükler ve dosya yollarını döner.
     *
     * @param array $files yüklenecek dosyaların bilgilerini içeren dizi
-    * @param string $path yüklenecek dosyaların sunucudaki yolu
+    * @param string $dir yüklenecek dosyaların sunucudaki dizini
     *
     * @return array yüklenen dosyaların sunucudaki tam yollarını içeren dizi
     * @throws SystemException yükleme başarısız olursa 400 hatası fırlatır
     */
-   final protected function upload(?array $files, string $path): array {
+   final protected function upload(?array $files, ?string $dir = ''): array {
       if (empty($files) || !isset($files['name'])) {
          return [];
       }
 
-      $result = [];
-      $this->upload->setPath('Public/upload/' . $path);
-
-      if (!is_array($files['name'])) {
-         $files = [
-            'name'      => [$files['name']],
-            'tmp_name'  => [$files['tmp_name']],
-            'type'      => [$files['type']],
-            'error'     => [$files['error']],
-            'size'      => [$files['size']],
-         ];
-      }
-
-      foreach ($files['name'] as $i => $name) {
-         $finalName = bin2hex(random_bytes(8)) . '-' . $name;
-         $fullPath  = str_replace('\\', '/', $this->upload->getPath() . '/' . $finalName);
-
-         if (!$this->upload->handle([
-            'name'     => $name,
-            'tmp_name' => $files['tmp_name'][$i],
-            'type'     => $files['type'][$i],
-            'error'    => $files['error'][$i],
-            'size'     => $files['size'][$i],
-         ], $finalName)) {
-            throw new SystemException(json_encode($this->upload->error()), 400);
-         }
-
-         $result[] = $fullPath;
-      }
-
-      return $result;
+      $this->upload->setDir($dir);
+      return $this->upload->handle($files);
    }
 
    /**
     * Dosyayı siler.
     *
-    * @param string|array|null $path silinecek dosyanın yolu
+    * @param string|array|null $files silinecek dosyanın yolu veya yolları dizisi
     *
     * @return bool silme işlemi başarılıysa `true` döner
     * @throws SystemException silme işlemi başarısız olursa 400 hatası fırlatır
     */
-   final protected function unlink(string|array|null $path = null): bool {
-      if (empty($path)) {
+   final protected function unlink(string|array|null $files = null): bool {
+      if (empty($files) || $files === null) {
          return false;
       }
 
-      $deleted = false;
-
-      if (is_array($path)) {
-         foreach ($path as $p) {
-            if (file_exists($p)) {
-               if (!unlink($p)) {
-                  throw new SystemException('Failed to delete file', 400);
-               }
-               $deleted = true;
-            }
-         }
-      } else {
-         if (file_exists($path)) {
-            if (!unlink($path)) {
-               throw new SystemException('Failed to delete file', 400);
-            }
-            $deleted = true;
-         }
-      }
-
-      return $deleted;
+      return $this->upload->unlink($files);
    }
 }
