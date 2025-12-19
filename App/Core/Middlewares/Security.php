@@ -5,13 +5,11 @@ declare(strict_types=1);
 namespace App\Core\Middlewares;
 
 use System\Http\Request;
-use System\Http\Response;
 use System\Exception\SystemException;
 
-class _Security {
+class Security {
    public function __construct(
       private Request $request,
-      private Response $response
    ) {
    }
 
