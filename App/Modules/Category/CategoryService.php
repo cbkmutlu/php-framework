@@ -9,6 +9,7 @@ use App\Core\Abstracts\Service;
 use System\Exception\SystemException;
 use App\Modules\Category\CategoryRequest;
 use App\Modules\Category\CategoryRepository;
+use System\Upload\Adapter\LocalUpload;
 
 class CategoryService extends Service {
    /** @var CategoryRepository */
@@ -213,7 +214,7 @@ class CategoryService extends Service {
     */
    private function checkFields(CategoryRequest $request, bool $create = true): void {
       $this->check([
-         'code' => $request->code,
+         'code' => $request->code
       ], $request, $create);
    }
 }
