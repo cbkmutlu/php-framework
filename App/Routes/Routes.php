@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Core\Middlewares\Auth;
+use App\Core\Middlewares\RateLimit;
 use App\Modules\Auth\AuthController;
 use App\Modules\Brand\BrandController;
 use App\Modules\File\FileController;
@@ -11,10 +12,14 @@ use App\Modules\Category\CategoryController;
 
 /** @var System\Router\Router $router */
 
-// Auth routes
-$router->prefix('v1/auth')->group(function () use ($router) {
+// Public routes
+$router->prefix('v1/auth')->middleware([RateLimit::class])->group(function () use ($router) {
    $router->post('/login', [AuthController::class, 'login']);
    $router->post('/refresh', [AuthController::class, 'refresh']);
+});
+
+// Auth routes
+$router->prefix('v1/auth')->middleware([Auth::class])->group(function () use ($router) {
    $router->post('/logout', [AuthController::class, 'logout']);
    $router->post('/logoutall', [AuthController::class, 'logoutAll']);
 });
