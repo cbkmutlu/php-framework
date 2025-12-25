@@ -28,7 +28,7 @@ import_env($config['env']);
 $router = new Router($container);
 
 // Routes
-foreach (glob(ROOT_DIR . '/' .  $config['routes'] . '/*.php') as $route) {
+foreach (glob(APP_DIR . 'Routes/*.php') as $route) {
    require_once $route;
 }
 $router->run();
