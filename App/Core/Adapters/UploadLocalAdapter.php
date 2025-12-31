@@ -8,7 +8,7 @@ use System\Upload\UploadAdapter;
 use System\Exception\SystemException;
 
 class UploadLocalAdapter implements UploadAdapter {
-   public function upload(array $file, string $path, string $name): bool {
+   public function upload(array $file, string $path, string $name, string $dir = ''): bool {
       if (!move_uploaded_file($file['tmp_name'], $path . '/' . $name)) {
          throw new SystemException('File [' . $file['name'] . '] upload failed');
       }
@@ -16,7 +16,7 @@ class UploadLocalAdapter implements UploadAdapter {
       return true;
    }
 
-   public function unlink(string|array $files, string $path): bool {
+   public function unlink(string|array $files, string $path, string $dir = ''): bool {
       $deleted = false;
 
       if (is_array($files)) {

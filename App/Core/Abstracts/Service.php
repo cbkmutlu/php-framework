@@ -124,15 +124,17 @@ abstract class Service {
     * Dosyayı siler.
     *
     * @param string|array|null $files silinecek dosyanın yolu veya yolları dizisi
+    * @param string $dir silinecek dosyanın sunucudaki dizini
     *
     * @return bool silme işlemi başarılıysa `true` döner
     * @throws SystemException silme işlemi başarısız olursa 400 hatası fırlatır
     */
-   final protected function unlink(string|array|null $files = null): bool {
+   final protected function unlink(string|array|null $files = null, string $dir = ''): bool {
       if (empty($files) || $files === null) {
          return false;
       }
 
+      $this->upload->setDir($dir);
       return $this->upload->unlink($files);
    }
 }
