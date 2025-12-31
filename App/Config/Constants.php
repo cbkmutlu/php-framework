@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-define('ENV', 'development');
 define('ROOT_DIR', realpath(__DIR__ . '/../../') . '/');
 define('APP_DIR', ROOT_DIR . 'App/');
 define('SYSTEM_DIR', ROOT_DIR . 'System/');

@@ -50,11 +50,11 @@ return [
       'connections' => [
          'primary' => [
             'db_driver'    => 'mysql',
-            'db_host'      => getenv('DB_HOST'),
-            'db_port'      => getenv('DB_PORT'),
-            'db_user'      => getenv('DB_USER'),
-            'db_pass'      => getenv('DB_PASS'),
-            'db_name'      => getenv('DB_NAME'),
+            'db_host'      => get_env('DB_HOST'),
+            'db_port'      => get_env('DB_PORT'),
+            'db_user'      => get_env('DB_USER'),
+            'db_pass'      => get_env('DB_PASS'),
+            'db_name'      => get_env('DB_NAME'),
             'db_charset'   => 'utf8mb4',
             'db_collation' => 'utf8mb4_general_ci',
             'db_prefix'    => ''
@@ -179,21 +179,21 @@ return [
 
    'storage' => [
       'cloudflare' => [
-         'account_id' => getenv('CF_ACCOUNT_ID'),
-         'access_key_id' => getenv('CF_ACCESS_KEY_ID'),
-         'access_key_secret' => getenv('CF_ACCESS_KEY_SECRET'),
-         'bucket_name' => getenv('CF_BUCKET_NAME'),
-         'endpoint' => getenv('CF_ENDPOINT'),
-         'public_dev_url' => getenv('CF_PUBLIC_DEV_URL'),
-         'cdn_url' => getenv('CDN_URL') ?: null
+         'account_id'        => get_env('CF_ACCOUNT_ID'),
+         'access_key_id'     => get_env('CF_ACCESS_KEY_ID'),
+         'access_key_secret' => get_env('CF_ACCESS_KEY_SECRET'),
+         'bucket_name'       => get_env('CF_BUCKET_NAME'),
+         'endpoint'          => get_env('CF_ENDPOINT'),
+         'public_dev_url'    => get_env('CF_PUBLIC_DEV_URL'),
+         'cdn_url'           => get_env('CDN_URL') ?: null
       ],
       'aws' => [
-         'key' => '',
-         'secret' => '',
-         'region' => '',
-         'bucket' => '',
+         'key'      => '',
+         'secret'   => '',
+         'region'   => '',
+         'bucket'   => '',
          'endpoint' => '',
-         'cdn_url' => ''
+         'cdn_url'  => ''
       ]
    ],
 
