@@ -1,0 +1,18 @@
+<IfModule mod_rewrite.c>
+   Options -Indexes
+   RewriteEngine On
+
+   # --- authorization header ---
+   RewriteCond %{HTTP:Authorization} .
+   RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+   # --- trailing slash ---
+   RewriteCond %{REQUEST_FILENAME} !-d
+   RewriteCond %{REQUEST_URI} ^(.+)/$
+   RewriteRule ^ %1 [L,R=301]
+
+   # --- front controller ---
+   RewriteCond %{REQUEST_FILENAME} !-f
+   RewriteCond %{REQUEST_FILENAME} !-d
+   RewriteRule ^ index.php [QSA,L]
+</IfModule>
