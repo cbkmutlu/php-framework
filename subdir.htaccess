@@ -1,0 +1,23 @@
+<IfModule mod_rewrite.c>
+   Options -Indexes
+   RewriteEngine On
+
+   # --- block dotfiles ---
+   RewriteCond %{REQUEST_URI} (^|/)\.
+   RewriteCond %{REQUEST_URI} !^/\.well-known
+   RewriteRule .* - [F,L]
+
+   # --- trailing slash ---
+   RewriteCond %{REQUEST_FILENAME} !-d
+   RewriteCond %{REQUEST_URI} ^(.+)/$
+   RewriteRule ^ %1 [L,R=301]
+
+   # --- upload dispatcher ---
+   RewriteCond %{REQUEST_FILENAME} !-f
+   RewriteCond %{REQUEST_FILENAME} !-d
+   RewriteRule ^upload/(.*)$ Public/upload/$1 [L]
+
+   # --- route dispatcher ---
+   RewriteCond %{REQUEST_URI} !^/Public/
+   RewriteRule ^(.*)$ Public/$1 [L]
+</IfModule>
