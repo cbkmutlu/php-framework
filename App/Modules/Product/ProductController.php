@@ -24,7 +24,7 @@ class ProductController extends Controller {
 
    /**
     * @OA\Get(
-    *    tags={"Product"}, path="/product/", summary="Ürün listesi",
+    *    tags={"Product"}, path="/product", summary="Ürün listesi",
     *    @OA\Response(response=200, description="Success")
     * )
     */
@@ -54,7 +54,7 @@ class ProductController extends Controller {
    }
 
    /**
-    * @OA\Post(tags={"Product"}, path="/product/", summary="Ürün ekle",
+    * @OA\Post(tags={"Product"}, path="/product", summary="Ürün ekle",
     *    @OA\Response(response=201, description="Success"),
     *    @OA\RequestBody(required=true, @OA\JsonContent(
     *       required={"code", "title", "content", "is_active", "sort_order"},
@@ -80,7 +80,7 @@ class ProductController extends Controller {
    }
 
    /**
-    * @OA\Put(tags={"Product"}, path="/product/", summary="Ürün güncelle",
+    * @OA\Put(tags={"Product"}, path="/product", summary="Ürün güncelle",
     *    @OA\Response(response=200, description="Success"),
     *    @OA\RequestBody(required=true, @OA\JsonContent(
     *       required={"id", "code", "title", "content", "is_active", "sort_order"},

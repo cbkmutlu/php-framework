@@ -24,7 +24,7 @@ class BrandController extends Controller {
 
    /**
     * @OA\Get(
-    *    tags={"Brand"}, path="/brand/", summary="Marka listesi",
+    *    tags={"Brand"}, path="/brand", summary="Marka listesi",
     *    @OA\Response(response=200, description="Success")
     * )
     */
@@ -54,7 +54,7 @@ class BrandController extends Controller {
    }
 
    /**
-    * @OA\Post(tags={"Brand"}, path="/brand/", summary="Marka ekle",
+    * @OA\Post(tags={"Brand"}, path="/brand", summary="Marka ekle",
     *    @OA\Response(response=201, description="Success"),
     *    @OA\RequestBody(required=true, @OA\JsonContent(
     *       required={"title"},
@@ -78,7 +78,7 @@ class BrandController extends Controller {
    }
 
    /**
-    * @OA\Put(tags={"Brand"}, path="/brand/", summary="Marka güncelle",
+    * @OA\Put(tags={"Brand"}, path="/brand", summary="Marka güncelle",
     *    @OA\Response(response=200, description="Success"),
     *    @OA\RequestBody(required=true, @OA\JsonContent(
     *       required={"id", "title"},

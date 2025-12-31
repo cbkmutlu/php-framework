@@ -9,7 +9,6 @@ use App\Core\Abstracts\Service;
 use System\Exception\SystemException;
 use App\Modules\Category\CategoryRequest;
 use App\Modules\Category\CategoryRepository;
-use System\Upload\Adapter\LocalUpload;
 
 class CategoryService extends Service {
    /** @var CategoryRepository */
@@ -58,8 +57,14 @@ class CategoryService extends Service {
                'sort_order' => $request->sort_order,
                'image_path' => $request->image_path
             ]);
+            $categoryId = $create->lastInsertId();
 
-            return $this->getOne($create->lastInsertId(), $lang_id);
+            // translate
+            $this->translate(['title', 'content'], [
+               'category_id' => $categoryId
+            ], $request->translate, 'category_translate');
+
+            return $this->getOne($categoryId, $lang_id);
          } catch (SystemException $e) {
             // unlink image
             if (isset($request->image_path)) {
@@ -97,7 +102,7 @@ class CategoryService extends Service {
                'id' => $request->id
             ]);
 
-            // update translate
+            // translate
             $this->translate(['title', 'content'], [
                'category_id' => $request->id
             ], $request->translate, 'category_translate');

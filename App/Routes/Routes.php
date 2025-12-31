@@ -5,33 +5,33 @@ declare(strict_types=1);
 use App\Core\Middlewares\Auth;
 use App\Core\Middlewares\RateLimit;
 use App\Modules\Auth\AuthController;
-use App\Modules\Brand\BrandController;
 use App\Modules\File\FileController;
+use App\Modules\Brand\BrandController;
 use App\Modules\Product\ProductController;
 use App\Modules\Category\CategoryController;
 
 /** @var System\Router\Router $router */
 
 // Public routes
-$router->prefix('v1/auth')->middleware([RateLimit::class])->group(function () use ($router) {
+$router->prefix('api/v1/auth')->middleware([RateLimit::class])->group(function () use ($router) {
    $router->post('/login', [AuthController::class, 'login']);
    $router->post('/refresh', [AuthController::class, 'refresh']);
 });
 
 // Auth routes
-$router->prefix('v1/auth')->middleware([Auth::class])->group(function () use ($router) {
+$router->prefix('api/v1/auth')->middleware([Auth::class])->group(function () use ($router) {
    $router->post('/logout', [AuthController::class, 'logout']);
    $router->post('/logoutall', [AuthController::class, 'logoutAll']);
 });
 
 // File routes
-$router->prefix('v1/file')->middleware([Auth::class])->group(function () use ($router) {
+$router->prefix('api/v1/file')->middleware([Auth::class])->group(function () use ($router) {
    $router->post('/', [FileController::class, 'uploadFile']);
    $router->patch('/', [FileController::class, 'unlinkFile']);
 });
 
 // Product routes
-$router->prefix('v1/product')->middleware([Auth::class])->group(function () use ($router) {
+$router->prefix('api/v1/product')->middleware([Auth::class])->group(function () use ($router) {
    $router->get('/', [ProductController::class, 'getAll']);
    $router->post('/', [ProductController::class, 'create']);
    $router->put('/', [ProductController::class, 'update']);
@@ -42,7 +42,7 @@ $router->prefix('v1/product')->middleware([Auth::class])->group(function () use 
 });
 
 // Category routes
-$router->prefix('v1/category')->middleware([Auth::class])->group(function () use ($router) {
+$router->prefix('api/v1/category')->middleware([Auth::class])->group(function () use ($router) {
    $router->get('/', [CategoryController::class, 'getAll']);
    $router->post('/', [CategoryController::class, 'create']);
    $router->put('/', [CategoryController::class, 'update']);
@@ -53,11 +53,10 @@ $router->prefix('v1/category')->middleware([Auth::class])->group(function () use
 });
 
 // Brand routes
-$router->prefix('v1/brand')->middleware([Auth::class])->group(function () use ($router) {
+$router->prefix('api/v1/brand')->middleware([Auth::class])->group(function () use ($router) {
    $router->get('/', [BrandController::class, 'getAll']);
    $router->post('/', [BrandController::class, 'create']);
    $router->put('/', [BrandController::class, 'update']);
    $router->delete('/{id}', [BrandController::class, 'delete'])->where(['id' => '([0-9]+)']);
    $router->get('/{id}', [BrandController::class, 'getById'])->where(['id' => '([0-9]+)']);
 });
-

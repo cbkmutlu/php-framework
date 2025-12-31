@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\File;
 
+use finfo;
 use System\Upload\Upload;
 use App\Core\Abstracts\Service;
 use App\Modules\File\FileRepository;
@@ -38,19 +39,12 @@ class FileService extends Service {
     * proxy
     */
    public function proxyFile($params): mixed {
-      $path = $params['path'] ?? '';
-
-      header("Access-Control-Allow-Origin: *");
-      header("Access-Control-Allow-Methods: GET, OPTIONS");
-      header("Access-Control-Allow-Headers: Content-Type");
-      header("Access-Control-Allow-Credentials: true");
+      $path = PUBLIC_DIR . $params['path'] ?? '';
 
       if (file_exists($path)) {
-         $finfo = finfo_open(FILEINFO_MIME_TYPE);
-         header("Content-Type: " . finfo_file($finfo, $path));
-         // header('Content-Type: ' . mime_content_type($path));
-         finfo_close($finfo);
-
+         $finfo = new finfo(FILEINFO_MIME_TYPE);
+         $mime  = $finfo->file($path) ?: 'application/octet-stream';
+         header('Content-Type: ' . $mime);
          return readfile($path);
       }
 

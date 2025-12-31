@@ -7,7 +7,7 @@ use App\Modules\Swagger\SwaggerController;
 
 /** @var System\Router\Router $router */
 
-$router->prefix('swagger')->middleware([Swagger::class])->group(function () use ($router) {
+$router->prefix('api/swagger')->middleware([Swagger::class])->group(function () use ($router) {
    // swagger index
    $router->get('/', function () {
       require_once PUBLIC_DIR . 'swagger/index.html';

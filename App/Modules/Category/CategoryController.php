@@ -24,7 +24,7 @@ class CategoryController extends Controller {
 
    /**
     * @OA\Get(
-    *    tags={"Category"}, path="/category/", summary="Kategori listesi",
+    *    tags={"Category"}, path="/category", summary="Kategori listesi",
     *    @OA\Response(response=200, description="Success"),
     *    @OA\Parameter(name="lang", in="query", required=false, @OA\Schema(type="integer"))
     * )
@@ -56,7 +56,7 @@ class CategoryController extends Controller {
    }
 
    /**
-    * @OA\Post(tags={"Category"}, path="/category/", summary="Kategori ekle",
+    * @OA\Post(tags={"Category"}, path="/category", summary="Kategori ekle",
     *    @OA\Response(response=201, description="Success"),
     *    @OA\RequestBody(required=true, @OA\JsonContent(
     *       required={"code", "title", "content", "image_path", "is_active", "sort_order"},
@@ -82,7 +82,7 @@ class CategoryController extends Controller {
    }
 
    /**
-    * @OA\Put(tags={"Category"}, path="/category/", summary="Kategori güncelle",
+    * @OA\Put(tags={"Category"}, path="/category", summary="Kategori güncelle",
     *    @OA\Response(response=200, description="Success"),
     *    @OA\RequestBody(required=true, @OA\JsonContent(
     *       required={"id", "code", "title", "content", "image_path", "is_active", "sort_order"},
