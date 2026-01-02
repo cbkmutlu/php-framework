@@ -208,7 +208,11 @@ return [
       'port'     => 25,
       'username' => '',
       'userpass' => '',
-      'charset'  => 'utf-8'
+      'charset'  => 'utf-8',
+      'from'     => [
+         'name'    => '',
+         'address' => ''
+      ]
    ],
 
    'providers' => [
