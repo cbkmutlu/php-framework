@@ -8,19 +8,7 @@ use App\Modules\Swagger\SwaggerController;
 /** @var System\Router\Router $router */
 
 $router->prefix('api/swagger')->middleware([Swagger::class])->group(function () use ($router) {
-   // swagger index
-   $router->get('/', function () {
-      require_once PUBLIC_DIR . 'swagger/index.html';
-   });
-
-   // swagger list
-   $router->get('/list', function () {
-      header('Content-Type: application/json; charset=UTF-8');
-      print(json_encode([
-         ['url' => './swagger/json', 'name' => 'Swagger'],
-      ]));
-   });
-
-   // swagger json
+   $router->get('/', [SwaggerController::class, 'index']);
+   $router->get('/list', [SwaggerController::class, 'list']);
    $router->get('/json', [SwaggerController::class, 'json']);
 });

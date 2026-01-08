@@ -25,7 +25,18 @@ $container->register();
 set_exception_handler([$container->get('error'), 'handleException']);
 set_error_handler([$container->get('error'), 'handleError']);
 
-// Import Env
+// Error Reporting
+if (get_env('APP_ENV') === 'development') {
+   error_reporting(E_ALL);
+   ini_set('display_errors', 1);
+   ini_set('display_startup_errors', 1);
+} else {
+   error_reporting(0);
+   ini_set('display_errors', 0);
+   ini_set('display_startup_errors', 0);
+}
+
+// Env
 $config = import_config('defines.app');
 import_env($config['env']);
 
