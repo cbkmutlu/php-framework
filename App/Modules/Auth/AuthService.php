@@ -95,7 +95,6 @@ class AuthService extends Service {
     */
    public function refresh(string $refreshToken): array {
       return $this->repository->transaction(function () use ($refreshToken): array {
-
          $hash  = hash('sha256', $refreshToken);
          $token = $this->repository->findTokenByHash($hash);
 
@@ -109,21 +108,23 @@ class AuthService extends Service {
          }
 
          $locked = $this->lockRefreshToken($token['id'], $hash);
+
          if (!$locked) {
-            $freshToken = $this->repository->findTokenById($token['id']);
+            $freshToken = $this->repository->findTokenById((int)$token['id']);
 
             if ($freshToken && $freshToken['next_id']) {
                $newToken = $this->repository->findTokenById((int) $freshToken['next_id']);
-               $user = $this->repository->findOne($newToken['user_id']);
 
                if (!$newToken) {
-                  throw new SystemException('Token chain broken', 500);
+                  throw new SystemException('Token chain broken', 403);
                }
+
+               $user = $this->repository->findOne($newToken['user_id']);
 
                return [
                   'user_id'      => $user['id'],
                   'user_email'   => $user['email'],
-                  'access_token' => $this->generateAccessToken($user['id'], $newToken['jti'])
+                  'access_token' => $this->generateAccessToken($user['id'], $newToken['jti']),
                ];
             }
 
