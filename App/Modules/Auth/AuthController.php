@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace App\Modules\Auth;
 
-use System\Http\Request;
-use System\Http\Response;
 use App\Modules\Auth\AuthService;
 use App\Core\Abstracts\Controller;
+use System\Http\{Request, Response};
 
 /**
  * @OA\Tag(name="Auth", description="Auth işlemleri")
@@ -31,15 +30,14 @@ class AuthController extends Controller {
     * )
     */
    public function login(): void {
-      $this->response(function () {
-         $json = $this->request->json();
-         $this->service->validate($json, [
-            'email'    => ['required', 'email'],
-            'password' => ['required']
-         ]);
+      $json = $this->request->json();
+      $this->service->validate($json, [
+         'email'    => ['required', 'email'],
+         'password' => ['required', 'string']
+      ]);
 
-         return $this->service->login($json['email'], $json['password']);
-      });
+      $result = $this->service->login($json['email'], $json['password']);
+      $this->response->json($result);
    }
 
    /**
@@ -47,19 +45,18 @@ class AuthController extends Controller {
     *    @OA\Response(response=201, description="Success"),
     *    @OA\RequestBody(required=true, @OA\JsonContent(
     *       required={"token"},
-    *       @OA\Property(property="token", type="string", example="refresh_token")
+    *       @OA\Property(property="token", type="string", example="access_token")
     *    ))
     * )
     */
    public function logout(): void {
-      $this->response(function () {
-         $json = $this->request->json();
-         $this->service->validate($json, [
-            'token' => ['required', 'string']
-         ]);
+      $json = $this->request->json();
+      $this->service->validate($json, [
+         'token' => ['required', 'string']
+      ]);
 
-         return $this->service->logout($json['token']);
-      });
+      $result = $this->service->logout($json['token']);
+      $this->response->json($result);
    }
 
    /**
@@ -72,14 +69,13 @@ class AuthController extends Controller {
     * )
     */
    public function logoutAll(): void {
-      $this->response(function () {
-         $json = $this->request->json();
-         $this->service->validate($json, [
-            'user_id' => ['required', 'integer']
-         ]);
+      $json = $this->request->json();
+      $this->service->validate($json, [
+         'user_id' => ['required', 'integer']
+      ]);
 
-         return $this->service->logoutAll($json['user_id']);
-      });
+      $result = $this->service->logoutAll($json['user_id']);
+      $this->response->json($result);
    }
 
    /**
@@ -92,13 +88,12 @@ class AuthController extends Controller {
     * )
     */
    public function refresh(): void {
-      $this->response(function () {
-         $json = $this->request->json();
-         $this->service->validate($json, [
-            'token' => ['required', 'string']
-         ]);
+      $json = $this->request->json();
+      $this->service->validate($json, [
+         'token' => ['required', 'string']
+      ]);
 
-         return $this->service->refresh($json['token']);
-      });
+      $result = $this->service->refresh($json['token']);
+      $this->response->json($result);
    }
 }

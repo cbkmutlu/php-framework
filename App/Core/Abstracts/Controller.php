@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace App\Core\Abstracts;
 
 use System\View\View;
-use System\Http\Request;
-use System\Http\Response;
+use System\Http\{Request, Response};
 
 abstract class Controller {
    protected Request $request;
@@ -45,17 +44,5 @@ abstract class Controller {
     */
    final protected function view(string $view, array $data = [], int $code = 200): void {
       $this->response->body($this->view->render($view, $data), $code);
-   }
-
-   /**
-    * response
-    */
-   final protected function response(callable $callback, mixed $message = null, int $code = 200): void {
-      try {
-         $result = $callback();
-         $this->response->json($message, $result, null, $code);
-      } catch (\Throwable $th) {
-         throw $th;
-      }
    }
 }

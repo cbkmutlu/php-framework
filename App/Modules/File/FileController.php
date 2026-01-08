@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace App\Modules\File;
 
-use System\Http\Request;
-use System\Http\Response;
 use App\Modules\File\FileService;
 use App\Core\Abstracts\Controller;
+use System\Http\{Request, Response};
 
 /**
  * @OA\Tag(name="File", description="Dosya işlemleri")
@@ -30,11 +29,11 @@ class FileController extends Controller {
     *    ))
     * )
     */
-   public function uploadFile() {
-      $this->response(function () {
-         $files = $this->request->files('files');
-         return $this->service->uploadFile($files);
-      }, code: 201);
+   public function uploadFile(): void {
+      $files = $this->request->files('files');
+      $result = $this->service->uploadFile($files);
+
+      $this->response->json($result, 201);
    }
 
    /**
@@ -46,11 +45,11 @@ class FileController extends Controller {
     *    ))
     * )
     */
-   public function unlinkFile() {
-      $this->response(function () {
-         $json = $this->request->json('path');
-         return $this->service->unlinkFile($json);
-      });
+   public function unlinkFile(): void {
+      $json = $this->request->json('path');
+      $result = $this->service->unlinkFile($json);
+
+      $this->response->json($result);
    }
 
    /**
@@ -60,9 +59,10 @@ class FileController extends Controller {
     *    @OA\Parameter(name="path", in="query", required=false, @OA\Schema(type="string"))
     * )
     */
-   public function proxyFile() {
-      $this->response(function () {
-         return $this->service->proxyFile($this->request->get());
-      });
+   public function proxyFile(): void {
+      $path = $this->request->get('path');
+      $result = $this->service->proxyFile($path);
+
+      $this->response->json($result);
    }
 }

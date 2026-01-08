@@ -29,14 +29,13 @@ class ProductController extends Controller {
     * )
     */
    public function getAll() {
-      $this->response(function () {
-         $result = $this->service->getAll();
+      $result = $this->service->getAll();
+      $list = array_map(function ($item) {
+         $response = new ProductResponse();
+         return $response->withData($item);
+      }, $result);
 
-         return array_map(function ($item) {
-            $response = new ProductResponse();
-            return $response->withData($item);
-         }, $result);
-      });
+      $this->response->json($list);
    }
 
    /**
@@ -46,11 +45,11 @@ class ProductController extends Controller {
     * )
     */
    public function getById(int $productId) {
-      $this->response(function () use ($productId) {
-         $result = $this->service->getOne($productId);
-         $response = new ProductResponse();
-         return $response->withData($result);
-      });
+      $result = $this->service->getOne($productId);
+      $response = new ProductResponse();
+      $response->withData($result);
+
+      $this->response->json($response);
    }
 
    /**
@@ -68,15 +67,15 @@ class ProductController extends Controller {
     * )
     */
    public function create() {
-      $this->response(function () {
-         $json = $this->request->json();
-         $request = new ProductRequest();
-         $request->assignData($json);
+      $json = $this->request->json();
+      $request = new ProductRequest();
+      $request->assignData($json);
 
-         $result = $this->service->createProduct($request);
-         $response = new ProductResponse();
-         return $response->withData($result);
-      }, code: 201);
+      $result = $this->service->createProduct($request);
+      $response = new ProductResponse();
+      $response->withData($result);
+
+      $this->response->json($response, 201);
    }
 
    /**
@@ -95,15 +94,15 @@ class ProductController extends Controller {
     * )
     */
    public function update() {
-      $this->response(function () {
-         $json = $this->request->json();
-         $request = new ProductRequest();
-         $request->assignData($json);
+      $json = $this->request->json();
+      $request = new ProductRequest();
+      $request->assignData($json);
 
-         $result = $this->service->updateProduct($request);
-         $response = new ProductResponse();
-         return $response->withData($result);
-      });
+      $result = $this->service->updateProduct($request);
+      $response = new ProductResponse();
+      $response->withData($result);
+
+      $this->response->json($response);
    }
 
    /**
@@ -114,9 +113,9 @@ class ProductController extends Controller {
     * )
     */
    public function delete(int $id): void {
-      $this->response(function () use ($id) {
-         return $this->service->deleteProduct($id);
-      });
+      $result = $this->service->deleteProduct($id);
+
+      $this->response->json($result);
    }
 
    /**
@@ -130,10 +129,10 @@ class ProductController extends Controller {
     * )
     */
    public function uploadImage(): void {
-      $this->response(function () {
-         $files = $this->request->files('files');
-         return $this->service->uploadImage($files);
-      });
+      $files = $this->request->files('files');
+      $result = $this->service->uploadImage($files);
+
+      $this->response->json($result);
    }
 
    /**
@@ -144,8 +143,8 @@ class ProductController extends Controller {
     * )
     */
    public function deleteImage(int $imageId): void {
-      $this->response(function () use ($imageId) {
-         return $this->service->deleteImage($imageId);
-      });
+      $result = $this->service->deleteImage($imageId);
+
+      $this->response->json($result);
    }
 }

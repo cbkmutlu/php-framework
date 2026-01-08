@@ -24,24 +24,26 @@ class FileService extends Service {
    /**
     * upload
     */
-   public function uploadFile($files): array {
+   public function uploadFile(array $files): array {
       return $this->upload($files, 'files');
    }
 
    /**
     * unlink
     */
-   public function unlinkFile($path): bool {
+   public function unlinkFile(mixed $path): bool {
       return $this->unlink($path);
    }
 
    /**
     * proxy
     */
-   public function proxyFile($params): mixed {
-      $path = PUBLIC_DIR . $params['path'] ?? '';
+   public function proxyFile(?string $path = null): mixed {
+      // $config = import_config('defines.upload');
+      // $path = $config['path'] . '/' . $params['path'] ?? '';
+      $path = PUBLIC_DIR . 'upload/' . $path;
 
-      if (file_exists($path)) {
+      if (file_exists($path) && is_file($path)) {
          $finfo = new finfo(FILEINFO_MIME_TYPE);
          $mime  = $finfo->file($path) ?: 'application/octet-stream';
          header('Content-Type: ' . $mime);

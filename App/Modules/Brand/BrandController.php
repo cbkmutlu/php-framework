@@ -29,14 +29,13 @@ class BrandController extends Controller {
     * )
     */
    public function getAll(): void {
-      $this->response(function () {
-         $result = $this->service->getAll();
+      $result = $this->service->getAll();
+      $list = array_map(function ($item) {
+         $response = new BrandResponse();
+         return $response->withData($item);
+      }, $result);
 
-         return array_map(function ($item) {
-            $response = new BrandResponse();
-            return $response->withData($item);
-         }, $result);
-      });
+      $this->response->json($list);
    }
 
    /**
@@ -46,11 +45,11 @@ class BrandController extends Controller {
     * )
     */
    public function getById(int $brandId): void {
-      $this->response(function () use ($brandId) {
-         $result = $this->service->getOne($brandId);
-         $response = new BrandResponse();
-         return $response->withData($result);
-      });
+      $result = $this->service->getOne($brandId);
+      $response = new BrandResponse();
+      $response->withData($result);
+
+      $this->response->json($response);
    }
 
    /**
@@ -66,15 +65,15 @@ class BrandController extends Controller {
     * )
     */
    public function create(): void {
-      $this->response(function () {
-         $json = $this->request->json();
-         $request = new BrandRequest();
-         $request->assignData($json);
+      $json = $this->request->json();
+      $request = new BrandRequest();
+      $request->assignData($json);
 
-         $result = $this->service->createBrand($request);
-         $response = new BrandResponse();
-         return $response->withData($result);
-      }, code: 201);
+      $result = $this->service->createBrand($request);
+      $response = new BrandResponse();
+      $response->withData($result);
+
+      $this->response->json($response, 201);
    }
 
    /**
@@ -91,15 +90,15 @@ class BrandController extends Controller {
     * )
     */
    public function update(): void {
-      $this->response(function () {
-         $json = $this->request->json();
-         $request = new BrandRequest();
-         $request->assignData($json);
+      $json = $this->request->json();
+      $request = new BrandRequest();
+      $request->assignData($json);
 
-         $result = $this->service->updateBrand($request);
-         $response = new BrandResponse();
-         return $response->withData($result);
-      });
+      $result = $this->service->updateBrand($request);
+      $response = new BrandResponse();
+      $response->withData($result);
+
+      $this->response->json($response);
    }
 
    /**
@@ -110,8 +109,8 @@ class BrandController extends Controller {
     * )
     */
    public function delete(int $brandId): void {
-      $this->response(function () use ($brandId) {
-         return $this->service->deleteBrand($brandId);
-      });
+      $result = $this->service->deleteBrand($brandId);
+
+      $this->response->json($result);
    }
 }

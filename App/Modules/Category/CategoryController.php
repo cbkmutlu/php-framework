@@ -30,14 +30,13 @@ class CategoryController extends Controller {
     * )
     */
    public function getAll(): void {
-      $this->response(function () {
-         $result = $this->service->getAll($this->params('language_id'));
+      $result = $this->service->getAll($this->params('language_id'));
+      $list = array_map(function ($item) {
+         $response = new CategoryResponse();
+         return $response->withData($item);
+      }, $result);
 
-         return array_map(function ($item) {
-            $response = new CategoryResponse();
-            return $response->withData($item);
-         }, $result);
-      });
+      $this->response->json($list);
    }
 
    /**
@@ -48,11 +47,11 @@ class CategoryController extends Controller {
     * )
     */
    public function getById(int $categoryId): void {
-      $this->response(function () use ($categoryId) {
-         $result = $this->service->getOne($categoryId, $this->params('language_id'));
-         $response = new CategoryResponse();
-         return $response->withData($result);
-      });
+      $result = $this->service->getOne($categoryId, $this->params('language_id'));
+      $response = new CategoryResponse();
+      $response->withData($result);
+
+      $this->response->json($response);
    }
 
    /**
@@ -70,15 +69,15 @@ class CategoryController extends Controller {
     * )
     */
    public function create(): void {
-      $this->response(function () {
-         $json = $this->request->json();
-         $request = new CategoryRequest();
-         $request->assignData($json);
+      $json = $this->request->json();
+      $request = new CategoryRequest();
+      $request->assignData($json);
 
-         $result = $this->service->createCategory($request, $this->params('language_id'));
-         $response = new CategoryResponse();
-         return $response->withData($result);
-      }, code: 201);
+      $result = $this->service->createCategory($request, $this->params('language_id'));
+      $response = new CategoryResponse();
+      $response->withData($result);
+
+      $this->response->json($response, 201);
    }
 
    /**
@@ -97,15 +96,15 @@ class CategoryController extends Controller {
     * )
     */
    public function update(): void {
-      $this->response(function () {
-         $json = $this->request->json();
-         $request = new CategoryRequest();
-         $request->assignData($json);
+      $json = $this->request->json();
+      $request = new CategoryRequest();
+      $request->assignData($json);
 
-         $result = $this->service->updateCategory($request, $this->params('language_id'));
-         $response = new CategoryResponse();
-         return $response->withData($result);
-      });
+      $result = $this->service->updateCategory($request, $this->params('language_id'));
+      $response = new CategoryResponse();
+      $response->withData($result);
+
+      $this->response->json($response);
    }
 
    /**
@@ -116,9 +115,9 @@ class CategoryController extends Controller {
     * )
     */
    public function delete(int $categoryId): void {
-      $this->response(function () use ($categoryId) {
-         return $this->service->deleteCategory($categoryId);
-      });
+      $result = $this->service->deleteCategory($categoryId);
+
+      $this->response->json($result);
    }
 
    /**
@@ -133,15 +132,14 @@ class CategoryController extends Controller {
     * )
     */
    public function updateOrder(): void {
-      $this->response(function () {
-         $json = $this->request->json();
-         $result = $this->service->updateOrder($json);
+      $json = $this->request->json();
+      $result = $this->service->updateOrder($json);
+      $list = array_map(function ($item) {
+         $response = new CategoryResponse();
+         return $response->withData($item);
+      }, $result);
 
-         return array_map(function ($item) {
-            $response = new CategoryResponse();
-            return $response->withData($item);
-         }, $result);
-      });
+      $this->response->json($list);
    }
 
    /**
@@ -155,10 +153,10 @@ class CategoryController extends Controller {
     * )
     */
    public function uploadImage(): void {
-      $this->response(function () {
-         $files = $this->request->files('files');
-         return $this->service->uploadImage($files);
-      });
+      $files = $this->request->files('files');
+      $result = $this->service->uploadImage($files);
+
+      $this->response->json($result);
    }
 
    /**
@@ -169,8 +167,8 @@ class CategoryController extends Controller {
     * )
     */
    public function deleteImage(int $id): void {
-      $this->response(function () use ($id) {
-         return $this->service->deleteImage($id);
-      });
+      $result = $this->service->deleteImage($id);
+
+      $this->response->json($result);
    }
 }
