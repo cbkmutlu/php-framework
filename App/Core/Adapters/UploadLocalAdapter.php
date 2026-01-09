@@ -8,37 +8,34 @@ use System\Upload\UploadAdapter;
 use System\Exception\SystemException;
 
 class UploadLocalAdapter implements UploadAdapter {
-   public function upload(array $file, string $path, string $name, string $dir = ''): bool {
+   public function upload(array $file, string $name, string $path, ?string $dir = null): string {
+      $path = ROOT_DIR . $path . ($dir ? '/' . $dir : '');
+      $this->checkPath($path);
+
       if (!move_uploaded_file($file['tmp_name'], $path . '/' . $name)) {
          throw new SystemException('File [' . $file['name'] . '] upload failed');
+      }
+
+      return ($dir ? $dir . '/' : '') . $name;
+   }
+
+   public function unlink(string $file, string $path): bool {
+      $path = ROOT_DIR . $path . '/' . $file;
+
+      if (is_file($path) && !@unlink($path)) {
+         throw new SystemException('File [' . $file . '] delete failed');
       }
 
       return true;
    }
 
-   public function unlink(string|array $files, string $path, string $dir = ''): bool {
-      $deleted = false;
-
-      if (is_array($files)) {
-         foreach ($files as $file) {
-            $fullpath = $path . '/' . $file;
-            if (file_exists($fullpath)) {
-               if (!unlink($fullpath)) {
-                  throw new SystemException('File [' . $file . '] delete failed');
-               }
-               $deleted = true;
-            }
-         }
-      } else {
-         $fullpath = $path . '/' . $files;
-         if (file_exists($fullpath)) {
-            if (!unlink($fullpath)) {
-               throw new SystemException('File [' . $files . '] delete failed');
-            }
-            $deleted = true;
-         }
+   private function checkPath(string $path): void {
+      if (!check_path($path)) {
+         throw new SystemException('Upload directory [' . $path . '] cannot be created');
       }
 
-      return $deleted;
+      if (!check_permission($path)) {
+         throw new SystemException('Upload directory [' . $path . '] is not writable');
+      }
    }
 }
