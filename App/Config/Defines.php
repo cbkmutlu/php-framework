@@ -170,15 +170,24 @@ return [
       'path'       => 'Storage/curl_cookie.txt'
    ],
 
-   'upload' => [
-      'path'          => 'Public/upload',
-      'adapter'       => App\Core\Adapters\UploadLocalAdapter::class,
-      'allowed_types' => ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'txt'],
-      'allowed_mimes' => ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'text/*']
+   'image' => [
+      'path'       => 'Public/upload/image',
+      'quality'    => 100,
+      'background' => [255, 255, 255, 100]
    ],
 
-   'storage' => [
+   'upload' => [
+      'default' => 'local',
+      'allowed_types' => ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'txt'],
+      'allowed_mimes' => ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'text/*'],
+      'local' => [
+         'path'    => 'Public/upload',
+         'allowed_types' => ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'txt'], // override
+         'allowed_mimes' => ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'text/*'], // override
+         'adapter' => App\Core\Adapters\UploadLocalAdapter::class
+      ],
       'cloudflare' => [
+         'path'              => '',
          'account_id'        => get_env('CF_ACCOUNT_ID'),
          'access_key_id'     => get_env('CF_ACCESS_KEY_ID'),
          'access_key_secret' => get_env('CF_ACCESS_KEY_SECRET'),
@@ -186,21 +195,7 @@ return [
          'endpoint'          => get_env('CF_ENDPOINT'),
          'public_dev_url'    => get_env('CF_PUBLIC_DEV_URL'),
          'cdn_url'           => get_env('CDN_URL') ?: null
-      ],
-      'aws' => [
-         'key'      => '',
-         'secret'   => '',
-         'region'   => '',
-         'bucket'   => '',
-         'endpoint' => '',
-         'cdn_url'  => ''
       ]
-   ],
-
-   'image' => [
-      'path'       => 'Public/upload/image',
-      'quality'    => 100,
-      'background' => [255, 255, 255, 100]
    ],
 
    'email' => [
@@ -216,28 +211,28 @@ return [
    ],
 
    'providers' => [
-      'benchmark'  => System\Benchmark\Benchmark::class,
+      'benchmark'  => [System\Benchmark\Benchmark::class, true],
       'cache'      => [System\Cache\Cache::class, true],
       'cookie'     => System\Cookie\Cookie::class,
       'curl'       => System\Curl\Curl::class,
       'database'   => [System\Database\Database::class, true],
       'date'       => System\Date\Date::class,
-      'event'      => System\Event\Event::class,
+      'event'      => [System\Event\Event::class, true],
       'request'    => [System\Http\Request::class, true],
       'response'   => [System\Http\Response::class, true],
       'image'      => System\Image\Image::class,
-      'jwt'        => System\Jwt\Jwt::class,
+      'jwt'        => [System\Jwt\Jwt::class, true],
       'language'   => [System\Language\Language::class, true],
       'log'        => [System\Log\Log::class, true],
       'mail'       => System\Mail\Mail::class,
       'pagination' => System\Pagination\Pagination::class,
-      'crypt'      => System\Crypt\Crypt::class,
+      'crypt'      => [System\Crypt\Crypt::class, true],
       'session'    => [System\Session\Session::class, true],
       'similarity' => System\Text\Similarity::class,
       'upload'     => System\Upload\Upload::class,
       'validation' => System\Validation\Validation::class,
-      'view'       => System\View\View::class,
-      'error'      => System\Exception\ExceptionHandler::class
+      'view'       => [System\View\View::class, true],
+      'error'      => [System\Exception\ExceptionHandler::class, true]
    ],
 
    'status' => [
