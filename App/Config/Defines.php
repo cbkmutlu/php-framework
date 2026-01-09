@@ -194,7 +194,8 @@ return [
          'bucket_name'       => get_env('CF_BUCKET_NAME'),
          'endpoint'          => get_env('CF_ENDPOINT'),
          'public_dev_url'    => get_env('CF_PUBLIC_DEV_URL'),
-         'cdn_url'           => get_env('CDN_URL') ?: null
+         'cdn_url'           => get_env('CDN_URL') ?: null,
+         'adapter'           => App\Core\Adapters\UploadCloudflareAdapter::class
       ]
    ],
 

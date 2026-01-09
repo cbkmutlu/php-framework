@@ -14,10 +14,9 @@ class UploadCloudflareAdapter implements UploadAdapter {
    private string $bucket;
 
    public function __construct() {
-      $config = import_config('defines.storage.cloudflare');
+      $config = import_config('defines.upload.cloudflare');
 
       $this->bucket = $config['bucket_name'];
-
       $this->client = new S3Client([
          'region'      => 'auto',
          'version'     => 'latest',
@@ -27,55 +26,47 @@ class UploadCloudflareAdapter implements UploadAdapter {
             'secret' => $config['access_key_secret'],
          ],
          'use_path_style_endpoint' => true,
-         'http' => ['verify' => false] // dev ortamı // FIXME
+         'http'                    => ['verify' => false]  // DEV mode
       ]);
    }
 
-   public function upload(array $file, string $path, string $name, string $dir = ''): bool {
-      $path = ($dir ? $dir : '');
-      $path = str_replace('\\', '/', $path);
+   public function upload(array $file, string $name, string $path, ?string $dir = null): string {
+      if ($path === '') {
+         $path = $dir;
+      } else {
+         $path = $path . ($dir ? '/' . $dir : '');
+      }
 
       try {
          $this->client->putObject([
-            'Bucket' => $this->bucket,
-            'Key'    => $path . '/' . $name,
-            'Body'   => fopen($file['tmp_name'], 'rb'),
+            'Bucket'      => $this->bucket,
+            'Key'         => $path . '/' . $name,
+            'Body'        => fopen($file['tmp_name'], 'rb'),
             'ContentType' => mime_content_type($file['tmp_name']),
-            // 'ACL'    => 'public-read' // Eğer bucket private ise bunu kaldır
+            // 'ACL'         => 'public-read' // Eğer bucket private ise bunu kaldır
          ]);
 
-         return true;
+         return ($dir ? $dir . '/' : '') . $name;
       } catch (AwsException $e) {
          throw new SystemException('Cloudflare Upload Error: ' . $e->getMessage());
       }
    }
 
-   public function unlink(string|array $files, string $path, string $dir = ''): bool {
+   public function unlink(string $file, string $path): bool {
+      if ($path === '') {
+         $key = $file;
+      } else {
+         $key = $path . '/' . $file;
+      }
+
       try {
-         if (is_array($files)) {
-            foreach ($files as $file) {
-               $key = $dir . '/' . $file;
-               $key = str_replace('\\', '/', $key);
+         $key = $path . '/' . $file;
+         $delete = $this->client->deleteObjectAsync([
+            'Bucket' => $this->bucket,
+            'Key'    => $key
+         ]);
 
-               $delete = $this->client->deleteObjectAsync([
-                  'Bucket' => $this->bucket,
-                  'Key'    => $key
-               ]);
-
-               $delete->wait();
-            }
-         } else {
-            $key = $dir . '/' . $files;
-            $key = str_replace('\\', '/', $key);
-
-            $delete = $this->client->deleteObjectAsync([
-               'Bucket' => $this->bucket,
-               'Key'    => $key
-            ]);
-
-            $delete->wait();
-         }
-
+         $delete->wait();
          return true;
       } catch (AwsException $e) {
          throw new SystemException('Cloudflare Delete Error: ' . $e->getMessage());
