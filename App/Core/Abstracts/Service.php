@@ -111,7 +111,7 @@ abstract class Service {
     * @return array yüklenen dosyaların sunucudaki tam yollarını içeren dizi
     * @throws SystemException yükleme başarısız olursa 400 hatası fırlatır
     */
-   final protected function upload(?array $files, ?string $dir = ''): array {
+   final protected function upload(?array $files, ?string $dir = null): array {
       if (empty($files) || !isset($files['name'])) {
          return [];
       }
@@ -124,17 +124,15 @@ abstract class Service {
     * Dosyayı siler.
     *
     * @param string|array|null $files silinecek dosyanın yolu veya yolları dizisi
-    * @param string $dir silinecek dosyanın sunucudaki dizini
     *
     * @return bool silme işlemi başarılıysa `true` döner
     * @throws SystemException silme işlemi başarısız olursa 400 hatası fırlatır
     */
-   final protected function unlink(string|array|null $files = null, string $dir = ''): bool {
+   final protected function unlink(string|array|null $files = null): bool {
       if (empty($files) || $files === null) {
          return false;
       }
 
-      $this->upload->setDir($dir);
       return $this->upload->unlink($files);
    }
 }

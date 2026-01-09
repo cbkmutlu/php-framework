@@ -39,11 +39,10 @@ class FileService extends Service {
     * proxy
     */
    public function proxyFile(?string $path = null): mixed {
-      // $config = import_config('defines.upload');
-      // $path = $config['path'] . '/' . $params['path'] ?? '';
-      $path = PUBLIC_DIR . 'upload/' . $path;
+      $config = import_config('defines.upload.local');
+      $path = ROOT_DIR . $config['path'] . ($path ? '/' . $path : '');
 
-      if (file_exists($path) && is_file($path)) {
+      if (is_file($path)) {
          $finfo = new finfo(FILEINFO_MIME_TYPE);
          $mime  = $finfo->file($path) ?: 'application/octet-stream';
          header('Content-Type: ' . $mime);
