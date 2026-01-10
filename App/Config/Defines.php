@@ -81,7 +81,8 @@ return [
    ],
 
    'middlewares' => [
-      App\Core\Middlewares\Security::class
+      App\Core\Middlewares\Security::class,
+      App\Core\Middlewares\Slash::class
    ],
 
    'listeners' => [

@@ -62,6 +62,9 @@ class SwaggerController extends Controller {
       </html>';
    }
 
+   /**
+    * list
+    */
    public function list() {
       header('Content-Type: application/json; charset=UTF-8');
       print(json_encode([
