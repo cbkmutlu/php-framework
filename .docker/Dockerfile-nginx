@@ -1,0 +1,68 @@
+FROM php:8.4-fpm
+
+# System dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    ca-certificates \
+    nginx \
+    supervisor \
+    libpng-dev \
+    libonig-dev \
+    libzip-dev \
+    libicu-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    zip \
+    unzip \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
+
+# PHP extensions
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+ && docker-php-ext-install \
+    pdo \
+    pdo_mysql \
+    mbstring \
+    exif \
+    pcntl \
+    bcmath \
+    gd \
+    zip \
+    fileinfo \
+    intl \
+    opcache
+
+# APCu
+RUN pecl install apcu \
+ && docker-php-ext-enable apcu
+
+# Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# PHP config
+COPY .docker/php.ini /usr/local/etc/php/conf.d/99-app.ini
+
+# Nginx config
+COPY .docker/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Supervisor config
+COPY .docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Runtime directories
+RUN mkdir -p /run/nginx /var/log/nginx
+
+# Application
+WORKDIR /var/www/html
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+COPY . .
+
+# Permissions
+RUN mkdir -p App/Storage/Logs App/Storage/Cache Public/upload \
+ && chown -R www-data:www-data App/Storage Public/upload \
+ && chmod -R 775 App/Storage Public/upload
+
+# Runtime
+EXPOSE 80
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

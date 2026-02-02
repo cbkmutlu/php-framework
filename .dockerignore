@@ -1,0 +1,27 @@
+# Logs and local files
+*.log
+*.local
+
+# Dependencies
+vendor
+
+# Storage
+App/Storage/Logs/*
+App/Storage/Cache/*
+Public/upload/*
+!Public/upload/.gitkeep
+
+# Docker
+.docker
+
+# Git
+.git
+.gitignore
+.gitmodules
+.github
+
+# IDE
+.vscode
+
+# Documentation
+*.md
