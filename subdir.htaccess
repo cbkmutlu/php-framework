@@ -1,3 +1,14 @@
+<DirectoryMatch "^/(App|System|vendor)">
+   <IfModule mod_authz_core.c>
+      Require all denied
+   </IfModule>
+
+   <IfModule !mod_authz_core.c>
+      Order allow,deny
+      Deny from all
+   </IfModule>
+</DirectoryMatch>
+
 <IfModule mod_rewrite.c>
    Options -Indexes
    RewriteEngine On

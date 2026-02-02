@@ -1,8 +1,17 @@
+# Logs and local files
 *.log
 *.local
-migration.json
 
+# Dependencies
 vendor
-Public/upload
-App/Storage/Cache
-App/Storage/Logs
+
+# Storage
+App/Storage/Logs/*
+!App/Storage/Logs/.gitkeep
+App/Storage/Cache/*
+!App/Storage/Cache/.gitkeep
+Public/upload/*
+!Public/upload/.gitkeep
+
+# Migration files
+migration.json
