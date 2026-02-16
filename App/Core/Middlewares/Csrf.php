@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Core\Middlewares;
 
+use System\Exception\SystemException;
 use System\Http\Request;
 use System\Session\Session;
-use System\Exception\SystemException;
 
 class Csrf {
    public function __construct(

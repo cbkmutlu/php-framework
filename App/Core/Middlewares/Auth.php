@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Core\Middlewares;
 
-use System\Jwt\Jwt;
 use System\Http\Request;
+use System\Jwt\Jwt;
 
 class Auth {
    public function __construct(

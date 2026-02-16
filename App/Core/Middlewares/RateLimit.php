@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Core\Middlewares;
 
-use System\Http\Request;
 use System\Cache\Cache;
 use System\Exception\SystemException;
+use System\Http\Request;
 
 class RateLimit {
    private int $maxAttempts;
@@ -88,7 +88,11 @@ class RateLimit {
 
    private function hitCache(string $key, int $expire): int {
       $data = $this->cache->get($key);
-      $count = (!is_array($data)) ? 1 : ($data['count'] ?? 0) + 1;
+      if (is_array($data)) {
+         $count = ($data['count'] ?? 0) + 1;
+      } else {
+         $count = 1;
+      }
       $this->cache->set($key, ['count' => $count], $expire);
 
       return $count;

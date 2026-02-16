@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Core\Middlewares;
 
-use System\Http\Request;
 use System\Exception\SystemException;
+use System\Http\Request;
 
 class Security {
    public function __construct(
