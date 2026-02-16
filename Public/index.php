@@ -7,8 +7,8 @@ if (php_sapi_name() === 'cli-server' && is_file($parse_url)) {
    return false;
 }
 
-use System\Router\Router;
 use System\Container\Container;
+use System\Router\Router;
 
 // Requires
 require_once dirname(__DIR__) . '/App/Config/Constants.php';
