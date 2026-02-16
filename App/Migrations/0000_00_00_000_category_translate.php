@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Core\Abstracts\Migration;
 
 class category_translate extends Migration {
-   public function up() {
+   public function up(): void {
       $this->database->query("CREATE TABLE IF NOT EXISTS `category_translate` (
          `category_id` INT NOT NULL DEFAULT 0,
          `language_id` INT NOT NULL DEFAULT 0,
@@ -47,7 +47,7 @@ class category_translate extends Migration {
          ->execute();
    }
 
-   public function down() {
+   public function down(): void {
       $this->database->query("DROP TABLE IF EXISTS `category_translate`");
    }
 }

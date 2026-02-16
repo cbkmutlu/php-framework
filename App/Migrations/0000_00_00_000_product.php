@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Core\Abstracts\Migration;
 
 class product extends Migration {
-   public function up() {
+   public function up(): void {
       $this->database->query("CREATE TABLE IF NOT EXISTS `product` (
          `id` INT AUTO_INCREMENT PRIMARY KEY,
          `brand_id` INT NOT NULL DEFAULT 0,
@@ -45,7 +45,7 @@ class product extends Migration {
          ->execute();
    }
 
-   public function down() {
+   public function down(): void {
       $this->database->query("DROP TABLE IF EXISTS `product`");
    }
 }

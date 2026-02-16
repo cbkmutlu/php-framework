@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Core\Abstracts\Migration;
 
 class category extends Migration {
-   public function up() {
+   public function up(): void {
       $this->database->query("CREATE TABLE IF NOT EXISTS `category` (
          `id` INT AUTO_INCREMENT PRIMARY KEY,
          `code` VARCHAR(50) NOT NULL,
@@ -25,7 +25,7 @@ class category extends Migration {
          ->execute();
    }
 
-   public function down() {
+   public function down(): void {
       $this->database->query("DROP TABLE IF EXISTS `category`");
    }
 }
