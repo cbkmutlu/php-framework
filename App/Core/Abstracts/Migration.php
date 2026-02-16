@@ -8,10 +8,23 @@ use System\Database\Database;
 
 abstract class Migration {
    public function __construct(
-      protected Database $database = new Database()
+      protected Database $database
    ) {
    }
 
+   /**
+    * Migration çalıştırır
+    */
+   abstract public function up(): void;
+
+   /**
+    * Migration geri alır
+    */
+   abstract public function down(): void;
+
+   /**
+    * Migration için varsayılan alanları döndürür
+    */
    protected function defaults(): string {
       return "
          `deleted_at` TIMESTAMP NULL DEFAULT NULL,

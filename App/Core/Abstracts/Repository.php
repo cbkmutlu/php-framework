@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Core\Abstracts;
 
 use System\Database\Database;
+use Exception;
 
 abstract class Repository {
    protected Database $database;
@@ -25,6 +26,9 @@ abstract class Repository {
          ->fetchAll();
    }
 
+   /**
+    * findAllBy
+    */
    public function findAllBy(?array $where = [], ?array $orderBy = null): array {
       return $this->database
          ->table($this->table)
@@ -125,7 +129,7 @@ abstract class Repository {
          $result = $callback();
          $this->database->commit();
          return $result;
-      } catch (\Exception $e) {
+      } catch (Exception $e) {
          $this->database->rollback();
          throw $e;
       }

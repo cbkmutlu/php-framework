@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Core\Abstracts;
 
-use System\View\View;
 use System\Http\{Request, Response};
+use System\View\View;
 
 abstract class Controller {
    protected Request $request;

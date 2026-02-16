@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace App\Core\Abstracts;
 
-use Traversable;
 use ArrayIterator;
-use JsonSerializable;
 use IteratorAggregate;
+use JsonSerializable;
+use Traversable;
 
 final class Collection implements IteratorAggregate, JsonSerializable {
-   private string $collection;
    private array $items = [];
 
-   public function __construct(string $collection) {
-      $this->collection = $collection;
+   public function __construct(
+      private string $collection
+   ) {
    }
 
    public function getIterator(): Traversable {

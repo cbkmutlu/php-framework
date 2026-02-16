@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Core\Abstracts;
 
-use ReflectionClass;
+use System\Exception\SystemException;
 use System\Validation\Validation;
 use App\Core\Abstracts\Collection;
-use System\Exception\SystemException;
+use ReflectionClass;
 
 trait AuditTrait {
    private array $keys;
@@ -131,21 +131,25 @@ abstract class Resource {
    }
 
    /**
-    * Validation rules
+    * Doğrulama kuralları
+    * @example ['name' => ['required', 'string', 'max:255']]
     */
    protected function rules(): array {
       return [];
    }
 
    /**
-    * Field labels
+    * Alan adları
+    * @example ['name' => 'Adı']
     */
    protected function labels(): array {
       return [];
    }
 
    /**
-    * Custom messages
+    * Hata mesajları
+    * @example ['required' => 'Bu alan zorunludur']
+    * @example ['required' => ':label alanı zorunludur']
     */
    protected function messages(): array {
       return [];

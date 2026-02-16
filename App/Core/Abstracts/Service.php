@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace App\Core\Abstracts;
 
-use System\Upload\Upload;
-use App\Core\Abstracts\Resource;
-use System\Validation\Validation;
 use System\Exception\SystemException;
+use System\Upload\Upload;
+use System\Validation\Validation;
+use App\Core\Abstracts\Resource;
 
 abstract class Service {
    protected Upload $upload;
    protected Validation $validation;
 
-   /** @var Repository */
+   /** @var \App\Core\Abstracts\Repository */
    protected mixed $repository;
 
    /**
@@ -60,6 +60,7 @@ abstract class Service {
       $this->validation->rules($rules);
       $this->validation->labels($labels);
       $this->validation->messages($messages);
+
       if (!$this->validation->handle()) {
          throw new SystemException(json_encode($this->validation->errors()), 400);
       }
@@ -134,5 +135,47 @@ abstract class Service {
       }
 
       return $this->upload->unlink($files);
+   }
+
+   /**
+    * Role ID'sini çözer.
+    * int gelirse aynen döner, string gelirse slug ile DB'den ID çözer.
+    *
+    * @param int|string $role Role ID veya slug
+    * @return int
+    * @throws SystemException role bulunamazsa 404 hatası fırlatır
+    */
+   protected function resolveRole(int|string $role): int {
+      if (is_int($role)) {
+         return $role;
+      }
+
+      $result = $this->repository->findBy(['slug' => $role], 'app_role');
+      if (!$result) {
+         throw new SystemException("Role not found: {$role}", 404);
+      }
+
+      return (int) $result['id'];
+   }
+
+   /**
+    * Permission ID'sini çözer.
+    * int gelirse aynen döner, string gelirse slug ile DB'den ID çözer.
+    *
+    * @param int|string $permission Permission ID veya slug
+    * @return int
+    * @throws SystemException permission bulunamazsa 404 hatası fırlatır
+    */
+   protected function resolvePermission(int|string $permission): int {
+      if (is_int($permission)) {
+         return $permission;
+      }
+
+      $result = $this->repository->findBy(['slug' => $permission], 'app_permission');
+      if (!$result) {
+         throw new SystemException("Permission not found: {$permission}", 404);
+      }
+
+      return (int) $result['id'];
    }
 }
