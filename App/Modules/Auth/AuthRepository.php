@@ -10,13 +10,13 @@ use App\Core\Abstracts\Repository;
 class AuthRepository extends Repository {
    public function __construct(
       protected Database $database,
-      protected string $table = 'user'
+      protected string $table = 'app_user'
    ) {
    }
 
    public function findUserByEmail(string $email): array|false {
       return $this->database
-         ->prepare('SELECT * FROM user WHERE email = :email')
+         ->prepare('SELECT * FROM app_user WHERE email = :email')
          ->execute([
             'email' => $email
          ])
@@ -25,7 +25,7 @@ class AuthRepository extends Repository {
 
    public function findTokenByHash(string $hash): array|false {
       return $this->database
-         ->prepare('SELECT * FROM api_user_token WHERE hash_token = :hash AND expires_at > NOW()')
+         ->prepare('SELECT * FROM app_user_token WHERE hash_token = :hash AND expires_at > NOW()')
          ->execute([
             'hash' => $hash
          ])
@@ -34,7 +34,7 @@ class AuthRepository extends Repository {
 
    public function findTokenById(int $id): array|false {
       return $this->database
-         ->prepare('SELECT * FROM api_user_token WHERE id = :id')
+         ->prepare('SELECT * FROM app_user_token WHERE id = :id')
          ->execute([
             'id' => $id
          ])
@@ -43,7 +43,7 @@ class AuthRepository extends Repository {
 
    public function findTokenByJti(string $jti): array|false {
       return $this->database
-         ->prepare('SELECT * FROM api_user_token WHERE jti = :jti')
+         ->prepare('SELECT * FROM app_user_token WHERE jti = :jti')
          ->execute([
             'jti' => $jti
          ])

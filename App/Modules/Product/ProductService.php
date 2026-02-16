@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace App\Modules\Product;
 
 use System\Date\Date;
+use System\Exception\SystemException;
 use System\Upload\Upload;
 use App\Core\Abstracts\Service;
-use System\Exception\SystemException;
-use App\Modules\Product\ProductRequest;
-use App\Modules\Product\ProductRepository;
+use App\Modules\Product\{ProductRepository, ProductRequest};
 
 class ProductService extends Service {
    /** @var ProductRepository */

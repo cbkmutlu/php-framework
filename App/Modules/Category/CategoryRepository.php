@@ -16,7 +16,10 @@ class CategoryRepository extends Repository {
 
    public function findAll(int $lang_id = 1): array {
       return $this->database
-         ->prepare("SELECT c.*, tr.* FROM {$this->table} c
+         ->prepare("SELECT
+               c.*,
+               tr.*
+            FROM {$this->table} c
             LEFT JOIN category_translate tr ON tr.category_id = c.id
                AND tr.language_id = :lang_id
             WHERE c.deleted_at IS NULL
@@ -30,7 +33,8 @@ class CategoryRepository extends Repository {
    public function findOne(int $id, int $lang_id = 1): array|false {
       return $this->database
          ->prepare("SELECT
-               c.*, tr.*,
+               c.*,
+               tr.*,
                COALESCE(tr.title, df.title) AS `title`,
                COALESCE(tr.content, df.content) AS `content`
             FROM {$this->table} c

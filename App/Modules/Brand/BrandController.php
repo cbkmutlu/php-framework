@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 namespace App\Modules\Brand;
 
-use System\Http\Request;
-use System\Http\Response;
+use System\Http\{Request, Response};
 use App\Core\Abstracts\Controller;
-use App\Modules\Brand\BrandRequest;
-use App\Modules\Brand\BrandService;
-use App\Modules\Brand\BrandResponse;
+use App\Modules\Brand\{BrandRequest, BrandResponse, BrandService};
 
 /**
  * @OA\Tag(name="Brand", description="Marka işlemleri")
@@ -23,8 +20,7 @@ class BrandController extends Controller {
    }
 
    /**
-    * @OA\Get(
-    *    tags={"Brand"}, path="/brand", summary="Marka listesi",
+    * @OA\Get(tags={"Brand"}, path="/brand", summary="Marka listesi",
     *    @OA\Response(response=200, description="Success")
     * )
     */
@@ -102,8 +98,7 @@ class BrandController extends Controller {
    }
 
    /**
-    * @OA\Delete(
-    *    tags={"Brand"}, path="/brand/{id}", summary="Marka sil",
+    * @OA\Delete(tags={"Brand"}, path="/brand/{id}", summary="Marka sil",
     *    @OA\Response(response=200, description="Success"),
     *    @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer"))
     * )

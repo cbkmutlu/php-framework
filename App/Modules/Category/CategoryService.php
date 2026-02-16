@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace App\Modules\Category;
 
+use System\Exception\SystemException;
 use System\Upload\Upload;
 use App\Core\Abstracts\Service;
-use System\Exception\SystemException;
-use App\Modules\Category\CategoryRequest;
-use App\Modules\Category\CategoryRepository;
+use App\Modules\Category\{CategoryRepository, CategoryRequest};
 
 class CategoryService extends Service {
    /** @var CategoryRepository */

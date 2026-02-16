@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 namespace App\Modules\Product;
 
-use System\Http\Request;
-use System\Http\Response;
+use System\Http\{Request, Response};
 use App\Core\Abstracts\Controller;
-use App\Modules\Product\ProductRequest;
-use App\Modules\Product\ProductService;
-use App\Modules\Product\ProductResponse;
+use App\Modules\Product\{ProductRequest, ProductResponse, ProductService};
 
 /**
  * @OA\Tag(name="Product", description="Ürün işlemleri")
@@ -23,8 +20,7 @@ class ProductController extends Controller {
    }
 
    /**
-    * @OA\Get(
-    *    tags={"Product"}, path="/product", summary="Ürün listesi",
+    * @OA\Get(tags={"Product"}, path="/product", summary="Ürün listesi",
     *    @OA\Response(response=200, description="Success")
     * )
     */
@@ -106,8 +102,7 @@ class ProductController extends Controller {
    }
 
    /**
-    * @OA\Delete(
-    *    tags={"Product"}, path="/product/{id}", summary="Ürün sil",
+    * @OA\Delete(tags={"Product"}, path="/product/{id}", summary="Ürün sil",
     *    @OA\Response(response=200, description="Success"),
     *    @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer"))
     * )
@@ -136,10 +131,9 @@ class ProductController extends Controller {
    }
 
    /**
-    * @OA\Delete(
-    *    tags={"Product"}, path="/product/image/{image_id}", summary="Ürün resmini sil (image_id'ye göre)",
+    * @OA\Delete(tags={"Product"}, path="/product/image/{imageId}", summary="Ürün resmini sil (imageId'ye göre)",
     *    @OA\Response(response=200, description="Success"),
-    *    @OA\Parameter(name="image_id", in="path", required=true, @OA\Schema(type="integer"))
+    *    @OA\Parameter(name="imageId", in="path", required=true, @OA\Schema(type="integer"))
     * )
     */
    public function deleteImage(int $imageId): void {

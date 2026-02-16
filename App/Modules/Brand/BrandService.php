@@ -5,10 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Brand;
 
 use System\Database\Database;
-use App\Core\Abstracts\Service;
 use System\Exception\SystemException;
-use App\Modules\Brand\BrandRequest;
-use App\Modules\Brand\BrandRepository;
+use App\Core\Abstracts\Service;
+use App\Modules\Brand\{BrandRepository, BrandRequest};
 
 class BrandService extends Service {
    /** @var BrandRepository */
@@ -76,14 +75,16 @@ class BrandService extends Service {
             'is_active' => $request->is_active,
             'sort_order' => $request->sort_order
          ]);
-         $this->repository->update($update, ['id' => $request->id]);
+         $this->repository->update($update, [
+            'id' => $request->id
+         ]);
 
          return $this->getOne($request->id);
       });
    }
 
    /**
-    * delete
+    * delete (soft delete)
     */
    public function deleteBrand(int $brandId): bool {
       return $this->repository->transaction(function () use ($brandId): bool {

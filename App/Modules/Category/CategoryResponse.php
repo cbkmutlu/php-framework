@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Category;
 
-use App\Core\Abstracts\Resource;
-use App\Core\Abstracts\AuditTrait;
+use App\Core\Abstracts\{AuditTrait, Resource};
 
 class CategoryResponse extends Resource {
    use AuditTrait;

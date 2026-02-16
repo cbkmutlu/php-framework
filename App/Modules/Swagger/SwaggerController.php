@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Swagger;
 
-use OpenApi\Generator;
 use App\Core\Abstracts\Controller;
+use OpenApi\Generator;
 
 /**
  * @OA\Info(
@@ -34,7 +34,7 @@ class SwaggerController extends Controller {
     */
    public function index() {
       if (get_env('APP_ENV') === 'development') {
-         $asset = '../swagger/';
+         $asset = '/swagger/';
       } else {
          $asset = 'Public/swagger/';
       }

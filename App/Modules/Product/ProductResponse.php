@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Product;
 
-use App\Core\Abstracts\Resource;
-use App\Core\Abstracts\AuditTrait;
-use App\Core\Abstracts\Collection;
+use App\Core\Abstracts\{AuditTrait, Collection, Resource};
 use App\Modules\Brand\BrandResponse;
 use App\Modules\Category\CategoryResponse;
 

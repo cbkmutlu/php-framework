@@ -16,7 +16,10 @@ class ProductRepository extends Repository {
 
    public function findAllCategory(int $productId): array {
       return $this->database
-         ->prepare("SELECT c.*, tr.* FROM product_category pc
+         ->prepare("SELECT
+               c.*,
+               tr.*
+            FROM product_category pc
             JOIN category c ON c.id = pc.category_id
                AND c.deleted_at IS NULL
             LEFT JOIN category_translate tr ON tr.category_id = c.id
@@ -31,7 +34,9 @@ class ProductRepository extends Repository {
 
    public function findAllImage(int $productId): array {
       return $this->database
-         ->prepare("SELECT pi.* FROM product_image pi
+         ->prepare("SELECT
+               pi.*
+            FROM product_image pi
             WHERE pi.image_path IS NOT NULL
                AND pi.product_id = :product_id
             ORDER BY pi.sort_order ASC
@@ -44,7 +49,9 @@ class ProductRepository extends Repository {
 
    public function findOneImage(int $imageId): array|false {
       return $this->database
-         ->prepare("SELECT pi.* FROM product_image pi
+         ->prepare("SELECT
+               pi.*
+            FROM product_image pi
             WHERE pi.image_path IS NOT NULL
                AND pi.id = :image_id
          ")
@@ -56,7 +63,9 @@ class ProductRepository extends Repository {
 
    public function findOneBrand(int $brandId): array|false {
       return $this->database
-         ->prepare("SELECT b.* FROM brand b
+         ->prepare("SELECT
+               b.*
+            FROM brand b
             WHERE b.id = :brand_id
          ")
          ->execute([

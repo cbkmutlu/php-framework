@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Brand;
 
-use App\Core\Abstracts\Resource;
-use App\Core\Abstracts\AuditTrait;
+use App\Core\Abstracts\{AuditTrait, Resource};
 
 class BrandResponse extends Resource {
    use AuditTrait;

@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Modules\Auth;
 
-use System\Jwt\Jwt;
-use System\Date\Date;
 use System\Crypt\Crypt;
-use System\Http\Request;
-use App\Core\Abstracts\Service;
-use System\Validation\Validation;
-use App\Modules\Auth\AuthRepository;
+use System\Date\Date;
 use System\Exception\SystemException;
+use System\Http\Request;
+use System\Jwt\Jwt;
+use System\Validation\Validation;
+use App\Core\Abstracts\Service;
+use App\Modules\Auth\AuthRepository;
 
 class AuthService extends Service {
    /** @var AuthRepository */
@@ -85,7 +85,7 @@ class AuthService extends Service {
       ], [
          'user_id' => $userId,
          'revoked_at' => ['IS NULL']
-      ], 'api_user_token');
+      ], 'app_user_token');
 
       return $result->affectedRows() > 0;
    }
@@ -199,7 +199,7 @@ class AuthService extends Service {
          'hash_token' => hash('sha256', $refreshToken),
          'created_at' => ['NOW(3)'],
          'expires_at' => $expire->getDate(Date::GENERIC3)
-      ], 'api_user_token');
+      ], 'app_user_token');
 
       return $result->lastInsertId();
    }
@@ -212,7 +212,7 @@ class AuthService extends Service {
          'revoked_at' => ['NOW(3)']
       ], [
          'id' => $tokenId
-      ], 'api_user_token');
+      ], 'app_user_token');
 
       $record = $this->repository->findTokenById($tokenId);
 
@@ -230,7 +230,7 @@ class AuthService extends Service {
          'revoked_at' => ['NOW(3)']
       ], [
          'id' => $id
-      ], 'api_user_token');
+      ], 'app_user_token');
    }
 
    /**
@@ -243,7 +243,7 @@ class AuthService extends Service {
          'id' => $tokenId,
          'requested_at' => ['IS NULL OR `requested_at` < NOW(3) - INTERVAL 3 SECOND'],
          'revoked_at' => ['IS NULL']
-      ], 'api_user_token');
+      ], 'app_user_token');
 
       if ($result->affectedRows() !== 1) {
          return false;
@@ -265,7 +265,7 @@ class AuthService extends Service {
       ], [
          'id' => $tokenId,
          'revoked_at' => ['IS NULL']
-      ], 'api_user_token');
+      ], 'app_user_token');
 
       if (function_exists('apcu_delete')) {
          apcu_delete('refresh_lock:' . $hash);

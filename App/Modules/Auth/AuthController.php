@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Modules\Auth;
 
-use App\Modules\Auth\AuthService;
-use App\Core\Abstracts\Controller;
 use System\Http\{Request, Response};
+use App\Core\Abstracts\Controller;
+use App\Modules\Auth\AuthService;
 
 /**
  * @OA\Tag(name="Auth", description="Auth işlemleri")

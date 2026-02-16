@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Modules\File;
 
-use finfo;
+use System\Exception\SystemException;
 use System\Upload\Upload;
 use App\Core\Abstracts\Service;
 use App\Modules\File\FileRepository;
-use System\Exception\SystemException;
+use finfo;
 
 class FileService extends Service {
    /** @var FileRepository */

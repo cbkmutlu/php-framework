@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Modules\File;
 
-use App\Modules\File\FileService;
-use App\Core\Abstracts\Controller;
 use System\Http\{Request, Response};
+use App\Core\Abstracts\Controller;
+use App\Modules\File\FileService;
 
 /**
  * @OA\Tag(name="File", description="Dosya işlemleri")
@@ -53,8 +53,7 @@ class FileController extends Controller {
    }
 
    /**
-    * @OA\Get(
-    *    tags={"File"}, path="/file", summary="Dosya proxy",
+    * @OA\Get(tags={"File"}, path="/file", summary="Dosya proxy",
     *    @OA\Response(response=200, description="Success"),
     *    @OA\Parameter(name="path", in="query", required=false, @OA\Schema(type="string"))
     * )

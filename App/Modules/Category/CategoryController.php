@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 namespace App\Modules\Category;
 
-use System\Http\Request;
-use System\Http\Response;
+use System\Http\{Request, Response};
 use App\Core\Abstracts\Controller;
-use App\Modules\Category\CategoryRequest;
-use App\Modules\Category\CategoryService;
-use App\Modules\Category\CategoryResponse;
+use App\Modules\Category\{CategoryRequest, CategoryResponse, CategoryService};
 
 /**
  * @OA\Tag(name="Category", description="Kategori işlemleri")
@@ -23,8 +20,7 @@ class CategoryController extends Controller {
    }
 
    /**
-    * @OA\Get(
-    *    tags={"Category"}, path="/category", summary="Kategori listesi",
+    * @OA\Get(tags={"Category"}, path="/category", summary="Kategori listesi",
     *    @OA\Response(response=200, description="Success"),
     *    @OA\Parameter(name="lang", in="query", required=false, @OA\Schema(type="integer"))
     * )
@@ -108,8 +104,7 @@ class CategoryController extends Controller {
    }
 
    /**
-    * @OA\Delete(
-    *    tags={"Category"}, path="/category/{id}", summary="Kategori sil",
+    * @OA\Delete(tags={"Category"}, path="/category/{id}", summary="Kategori sil",
     *    @OA\Response(response=200, description="Success"),
     *    @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer"))
     * )
@@ -160,8 +155,7 @@ class CategoryController extends Controller {
    }
 
    /**
-    * @OA\Delete(
-    *    tags={"Category"}, path="/category/{id}/image", summary="Kategori resmini sil",
+    * @OA\Delete(tags={"Category"}, path="/category/{id}/image", summary="Kategori resmini sil",
     *    @OA\Response(response=200, description="Success"),
     *    @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer"))
     * )
