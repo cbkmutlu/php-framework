@@ -1,8 +1,3 @@
 {
-   "recommendations": [
-      "chouzz.vscode-better-align",
-      "jacovanc.php-auto-strict-types",
-      "eritislami.php-import-sorter",
-      "bmewburn.vscode-intelephense-client"
-   ]
+   "recommendations": ["chouzz.vscode-better-align", "bmewburn.vscode-intelephense-client"]
 }
