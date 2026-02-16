@@ -2,19 +2,18 @@
 
 declare(strict_types=1);
 
-namespace App\Core\Adapters;
+namespace App\Core\Handlers\Upload;
 
-use Aws\S3\S3Client;
+use System\Upload\{UploadException, UploadInterface};
 use Aws\Exception\AwsException;
-use System\Upload\UploadAdapter;
-use System\Exception\SystemException;
+use Aws\S3\S3Client;
 
-class UploadCloudflareAdapter implements UploadAdapter {
+class CloudflareHandler implements UploadInterface {
    private S3Client $client;
    private string $bucket;
 
    public function __construct() {
-      $config = import_config('defines.upload.cloudflare');
+      $config = import_config('defines.upload.handlers.cloudflare');
 
       $this->bucket = $config['bucket_name'];
       $this->client = new S3Client([
@@ -48,7 +47,7 @@ class UploadCloudflareAdapter implements UploadAdapter {
 
          return ($dir ? $dir . '/' : '') . $name;
       } catch (AwsException $e) {
-         throw new SystemException('Cloudflare Upload Error: ' . $e->getMessage());
+         throw new UploadException('Cloudflare Upload Error: ' . $e->getMessage());
       }
    }
 
@@ -69,7 +68,7 @@ class UploadCloudflareAdapter implements UploadAdapter {
          $delete->wait();
          return true;
       } catch (AwsException $e) {
-         throw new SystemException('Cloudflare Delete Error: ' . $e->getMessage());
+         throw new UploadException('Cloudflare Delete Error: ' . $e->getMessage());
       }
    }
 }
