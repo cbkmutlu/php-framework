@@ -6,7 +6,7 @@ declare(strict_types=1);
 use System\Cli\Cli;
 
 if (php_sapi_name() !== 'cli') {
-   exit('CLI only');
+    exit('CLI only');
 }
 chdir(__DIR__);
 
@@ -14,7 +14,7 @@ require_once __DIR__ . "/App/Config/Constants.php";
 require_once __DIR__ . "/vendor/autoload.php";
 
 foreach (glob(SYSTEM_DIR . "Helpers/*.php") as $filename) {
-   require_once $filename;
+    require_once $filename;
 }
 
 $params = array_slice($argv, 1);

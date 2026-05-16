@@ -4,213 +4,233 @@ declare(strict_types=1);
 
 namespace App\Modules\Role;
 
-use System\Database\Database;
 use System\Exception\SystemException;
 use System\Gate\Gate;
 use App\Core\Abstracts\Service;
+use App\Modules\Permission\PermissionRepository;
 use App\Modules\Role\{RoleRepository, RoleRequest};
 
 class RoleService extends Service {
-   /** @var RoleRepository */
-   protected mixed $repository;
+    public function __construct(
+        protected Gate $gate,
+        protected RoleRepository $repository,
+        protected PermissionRepository $permissionRepository
+    ) {
+    }
 
-   public function __construct(
-      protected Database $database,
-      protected Gate $gate,
-      RoleRepository $repository
-   ) {
-      $this->repository = $repository;
-   }
+    /**
+     * Return all roles
+     */
+    public function getAll(): array {
+        return $this->repository->findAll();
+    }
 
-   /**
-    * getAll
-    */
-   public function getAll(): array {
-      return $this->repository->findAll();
-   }
+    /**
+     * Return role by id
+     */
+    public function getOne(int $roleId): array {
+        $result = $this->repository->findOne($roleId);
 
-   /**
-    * getOne
-    */
-   public function getOne(int $id): array {
-      $result = $this->repository->findOneWithPermission($id);
+        if (empty($result)) {
+            throw new SystemException('Record not found', 404);
+        }
 
-      if (empty($result)) {
-         throw new SystemException('Role not found', 404);
-      }
+        return $result;
+    }
 
-      return $result;
-   }
+    /**
+     * Create role
+     */
+    public function createRole(RoleRequest $request): array {
+        return $this->repository->transaction(function () use ($request): array {
+            // check fields
+            $this->checkFields($request);
 
-   /**
-    * create
-    */
-   public function createRole(RoleRequest $request): array {
-      return $this->repository->transaction(function () use ($request): array {
-         // check
-         $this->checkFields($request);
+            // create role
+            $create = $this->repository->create([
+                'name'        => $request->name,
+                'slug'        => $request->slug,
+                'description' => $request->description
+            ]);
+            $roleId = $create->lastInsertId();
 
-         // create
-         $create = $this->repository->create([
-            'name'        => $request->name,
-            'slug'        => $request->slug,
-            'description' => $request->description
-         ]);
+            // sync permissions
+            if (!empty($request->permissions)) {
+                $this->syncPermission($roleId, $request->permissions);
+            }
 
-         $roleId = $create->lastInsertId();
+            // return created role
+            return $this->getOne($roleId);
+        });
+    }
 
-         // sync permissions
-         if (!empty($request->permissions)) {
-            $this->repository->syncPermission($roleId, $request->permissions);
-         }
+    /**
+     * Update role
+     */
+    public function updateRole(RoleRequest $request): array {
+        return $this->repository->transaction(function () use ($request): array {
+            // check fields
+            $this->checkFields($request, false);
 
-         return $this->getOne($roleId);
-      });
-   }
+            // filter only request properties
+            $update = $request->filter([
+                'name'        => $request->name,
+                'slug'        => $request->slug,
+                'description' => $request->description
+            ]);
 
-   /**
-    * update
-    */
-   public function updateRole(RoleRequest $request): array {
-      return $this->repository->transaction(function () use ($request): array {
-         // check
-         $this->checkFields($request, false);
+            // update role
+            $this->repository->update($update, [
+                'id' => $request->id
+            ]);
 
-         // update
-         $update = $request->filterArray([
-            'name'        => $request->name,
-            'slug'        => $request->slug,
-            'description' => $request->description
-         ]);
-         $this->repository->update($update, [
-            'id' => $request->id
-         ]);
+            // sync permissions
+            if (isset($request->permissions)) {
+                $this->syncPermission($request->id, $request->permissions);
 
-         // sync permissions
-         if (isset($request->permissions)) {
-            $this->repository->syncPermission($request->id, $request->permissions);
-            $this->clearCacheForRole($request->id);
-         }
+                // clear cache
+                $this->clearRoleCache($request->id);
+            }
 
-         return $this->getOne($request->id);
-      });
-   }
+            // return updated role
+            return $this->getOne($request->id);
+        });
+    }
 
-   /**
-    * delete (hard delete)
-    */
-   public function deleteRole(int $id): bool {
-      return $this->repository->transaction(function () use ($id): bool {
-         // check if role exists
-         $this->getOne($id);
+    /**
+     * Delete role (hard delete)
+     */
+    public function deleteRole(int $roleId): bool {
+        return $this->repository->transaction(function () use ($roleId): bool {
+            // check relation
+            if ($this->repository->hasUserRelation($roleId)) {
+                throw new SystemException('Role has assigned users', 400);
+            }
 
-         // check if role has users assigned
-         $userRole = $this->repository->findBy([
-            'role_id' => $id
-         ], 'app_user_role');
-         if ($userRole) {
-            throw new SystemException('Role has users assigned', 400);
-         }
+            // hard delete (FK cascade delete role_permission)
+            $this->repository->hardDelete([
+                'id' => $roleId
+            ]);
 
-         // hard delete (FK cascade will handle role_permission)
-         $this->repository->hardDelete([
-            'id' => $id
-         ]);
+            return true;
+        });
+    }
 
-         return true;
-      });
-   }
+    /**
+     * Sync permission for role
+     */
+    public function syncPermission(int $roleId, array $permissions): array {
+        return $this->repository->transaction(function () use ($roleId, $permissions): array {
+            // delete all permissions
+            $this->repository->hardDelete([
+                'role_id' => $roleId
+            ], 'app_role_permission');
 
-   /**
-    * syncPermission
-    */
-   public function syncPermission(int $roleId, array $permissions): array {
-      // resolve permission IDs or slugs to IDs
-      $permissionIds = [];
-      foreach ($permissions as $permission) {
-         $permissionIds[] = $this->resolvePermission($permission);
-      }
+            // create permissions (bulk)
+            $create = [];
+            foreach ($permissions as $permission) {
+                $create[] = [
+                    'role_id'       => $roleId,
+                    'permission_id' => $this->resolvePermission($permission)
+                ];
+            }
+            $this->repository->create($create, 'app_role_permission');
 
-      return $this->repository->transaction(function () use ($roleId, $permissionIds): array {
-         // check if role exists
-         $this->getOne($roleId);
+            // clear cache
+            $this->clearRoleCache($roleId);
 
-         // sync
-         $this->repository->syncPermission($roleId, $permissionIds);
+            // return updated role
+            return $this->getOne($roleId);
+        });
+    }
 
-         $this->clearCacheForRole($roleId);
-         return $this->getOne($roleId);
-      });
-   }
+    /**
+     * Give permission to role
+     */
+    public function givePermission(int $roleId, int|string $permission): array {
+        // resolve permission
+        $permission = $this->resolvePermission($permission);
 
-   /**
-    * givePermission
-    */
-   public function givePermission(int $roleId, int|string $permission): array {
-      $permission = $this->resolvePermission($permission);
+        return $this->repository->transaction(function () use ($roleId, $permission): array {
+            // check relation
+            if ($this->repository->hasPermissionRelation($roleId, $permission)) {
+                throw new SystemException('Permission already assigned to this role', 400);
+            }
 
-      return $this->repository->transaction(function () use ($roleId, $permission): array {
-         // check if role exists
-         $this->getOne($roleId);
+            // give permission
+            $this->repository->create([
+                'role_id'       => $roleId,
+                'permission_id' => $permission
+            ], 'app_role_permission');
 
-         // check if already assigned
-         $exists = $this->repository->findBy([
-            'role_id'       => $roleId,
-            'permission_id' => $permission
-         ], 'app_role_permission');
-         if ($exists) {
-            throw new SystemException('Permission already assigned to this role', 400);
-         }
+            // clear cache
+            $this->clearRoleCache($roleId);
 
-         // give
-         $this->repository->givePermission($roleId, $permission);
+            // return updated role
+            return $this->getOne($roleId);
+        });
+    }
 
-         $this->clearCacheForRole($roleId);
-         return $this->getOne($roleId);
-      });
-   }
+    /**
+     * Revoke permission from role
+     */
+    public function revokePermission(int $roleId, int|string $permission): array {
+        // resolve permission
+        $permission = $this->resolvePermission($permission);
 
-   /**
-    * revokePermission
-    */
-   public function revokePermission(int $roleId, int|string $permission): array {
-      $permission = $this->resolvePermission($permission);
+        return $this->repository->transaction(function () use ($roleId, $permission): array {
+            // check relation
+            if ($this->repository->hasPermissionRelation($roleId, $permission) === false) {
+                throw new SystemException('Permission is not assigned to this role', 400);
+            }
 
-      return $this->repository->transaction(function () use ($roleId, $permission): array {
-         // check if role exists
-         $this->getOne($roleId);
+            // revoke permission
+            $this->repository->hardDelete([
+                'role_id'       => $roleId,
+                'permission_id' => $permission
+            ], 'app_role_permission');
 
-         // check if assigned
-         $exists = $this->repository->findBy([
-            'role_id'       => $roleId,
-            'permission_id' => $permission
-         ], 'app_role_permission');
-         if (!$exists) {
-            throw new SystemException('Permission is not assigned to this role', 400);
-         }
+            // clear cache
+            $this->clearRoleCache($roleId);
 
-         // revoke
-         $this->repository->revokePermission($roleId, $permission);
+            // return updated role
+            return $this->getOne($roleId);
+        });
+    }
 
-         $this->clearCacheForRole($roleId);
-         return $this->getOne($roleId);
-      });
-   }
+    /**
+     * Clear role cache
+     */
+    private function clearRoleCache(int $roleId): void {
+        $users = $this->repository->findUserByRole($roleId);
 
-   private function clearCacheForRole(int $roleId): void {
-      $users = $this->repository->findUserByRoleId($roleId);
+        foreach ($users as $user) {
+            $this->gate->clearUserCache((int) $user['user_id']);
+        }
+    }
 
-      foreach ($users as $user) {
-         $this->gate->clearUserCache((int) $user['user_id']);
-      }
-   }
+    /**
+     * Check fields
+     */
+    private function checkFields(RoleRequest $request, bool $create = true): void {
+        $this->check($this->repository, [
+            'slug' => $request->slug
+        ], $request, $create);
+    }
 
-   /**
-    * check
-    */
-   private function checkFields(RoleRequest $request, bool $create = true): void {
-      $this->check([
-         'slug' => $request->slug
-      ], $request, $create);
-   }
+    /**
+     * Resolve permission (id or slug)
+     */
+    private function resolvePermission(int|string $permission): int {
+        if (is_numeric($permission)) {
+            return (int) $permission;
+        }
+
+        $permission = $this->repository->findPermissionBySlug($permission);
+        if ($permission === null) {
+            throw new SystemException('Permission ' . $permission . ' not found', 404);
+        }
+
+        return $permission['id'];
+    }
 }

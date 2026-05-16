@@ -7,7 +7,7 @@ namespace App\Modules\Auth;
 use App\Core\Abstracts\Resource;
 
 class AuthResponse extends Resource {
-   public int $user_id;
-   public string $user_email;
-   public string $access_token;
+    public int $user_id;
+    public string $user_email;
+    public string $access_token;
 }

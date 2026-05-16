@@ -4,115 +4,109 @@ declare(strict_types=1);
 
 namespace App\Modules\Brand;
 
-use System\Database\Database;
 use System\Exception\SystemException;
 use App\Core\Abstracts\Service;
 use App\Modules\Brand\{BrandRepository, BrandRequest};
 
 class BrandService extends Service {
-   /** @var BrandRepository */
-   protected mixed $repository;
+    public function __construct(
+        protected BrandRepository $repository
+    ) {
+    }
 
-   public function __construct(
-      protected Database $database,
-      BrandRepository $repository
-   ) {
-      $this->repository = $repository;
-   }
+    /**
+     * Return all brands
+     */
+    public function getAll(): array {
+        return $this->repository->findAll();
+    }
 
-   /**
-    * getAll
-    */
-   public function getAll(): array {
-      return $this->repository->findAll();
-   }
+    /**
+     * Return brand by id
+     */
+    public function getOne(int $brandId): array {
+        $result = $this->repository->findOne($brandId);
+        if ($result === null) {
+            throw new SystemException('Record not found', 404);
+        }
 
-   /**
-    * getOne
-    */
-   public function getOne(int $brandId): array {
-      $result = $this->repository->findOne($brandId);
+        return $result;
+    }
 
-      if (empty($result)) {
-         throw new SystemException('Record not found', 404);
-      }
+    /**
+     * Create brand
+     */
+    public function createBrand(BrandRequest $request): array {
+        return $this->repository->transaction(function () use ($request): array {
+            // check fields
+            $this->checkFields($request);
 
-      return $result;
-   }
+            // create brand
+            $create = $this->repository->create([
+                'title'      => $request->title,
+                'content'    => $request->content,
+                'is_active'  => $request->is_active,
+                'sort_order' => $request->sort_order
+            ]);
+            $brandId = $create->lastInsertId();
 
-   /**
-    * create
-    */
-   public function createBrand(BrandRequest $request): array {
-      return $this->repository->transaction(function () use ($request): array {
-         // check
-         $this->checkFields($request);
+            // return created brand
+            return $this->getOne($brandId);
+        });
+    }
 
-         // create
-         $create = $this->repository->create([
-            'title' => $request->title,
-            'content' => $request->content,
-            'is_active' => $request->is_active,
-            'sort_order' => $request->sort_order
-         ]);
+    /**
+     * Update brand
+     */
+    public function updateBrand(BrandRequest $request): array {
+        return $this->repository->transaction(function () use ($request): array {
+            // check fields
+            $this->checkFields($request, false);
 
-         return $this->getOne($create->lastInsertId());
-      });
-   }
+            // filter only request fields
+            $update = $request->filter([
+                'title'      => $request->title,
+                'content'    => $request->content,
+                'is_active'  => $request->is_active,
+                'sort_order' => $request->sort_order
+            ]);
 
-   /**
-    * update
-    */
-   public function updateBrand(BrandRequest $request): array {
-      return $this->repository->transaction(function () use ($request): array {
-         // check
-         $this->checkFields($request, false);
+            // update brand
+            $this->repository->update($update, [
+                'id' => $request->id
+            ]);
 
-         // update
-         $update = $request->filterArray([
-            'title' => $request->title,
-            'content' => $request->content,
-            'is_active' => $request->is_active,
-            'sort_order' => $request->sort_order
-         ]);
-         $this->repository->update($update, [
-            'id' => $request->id
-         ]);
+            // return updated brand
+            return $this->getOne($request->id);
+        });
+    }
 
-         return $this->getOne($request->id);
-      });
-   }
+    /**
+     * Delete brand (soft delete)
+     */
+    public function deleteBrand(int $brandId): bool {
+        return $this->repository->transaction(function () use ($brandId): bool {
+            // check relation
+            if ($this->repository->hasProductRelation($brandId)) {
+                throw new SystemException('Brand has associated products', 400);
+            }
 
-   /**
-    * delete (soft delete)
-    */
-   public function deleteBrand(int $brandId): bool {
-      return $this->repository->transaction(function () use ($brandId): bool {
-         // check relation with product
-         $relation = $this->repository->findBy([
-            'brand_id' => $brandId,
-            'deleted_at' => ['IS NULL']
-         ], 'product');
-         if ($relation) {
-            throw new SystemException('Brand is related with product', 400);
-         }
+            // delete brand
+            $this->repository->softDelete([
+                'id'         => $brandId,
+                'deleted_at' => ['IS NULL']
+            ]);
 
-         // delete brand
-         $this->repository->softDelete([
-            'id' => $brandId,
-            'deleted_at' => ['IS NULL']
-         ]);
+            return true;
+        });
+    }
 
-         return true;
-      });
-   }
-
-   /**
-    * check
-    */
-   private function checkFields(BrandRequest $request, bool $create = true): void {
-      $this->check([
-         'title' => $request->title
-      ], $request, $create);
-   }
+    /**
+     * Check fields
+     */
+    private function checkFields(BrandRequest $request, bool $create = true): void {
+        $this->check($this->repository, [
+            'title' => $request->title
+        ], $request, $create);
+    }
 }

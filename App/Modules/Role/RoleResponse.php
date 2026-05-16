@@ -7,11 +7,11 @@ namespace App\Modules\Role;
 use App\Core\Abstracts\{AuditTrait, Resource};
 
 class RoleResponse extends Resource {
-   use AuditTrait;
+    use AuditTrait;
 
-   public int $id;
-   public string $name;
-   public string $slug;
-   public ?string $description;
-   public ?array $permissions;
+    public int $id;
+    public string $name;
+    public string $slug;
+    public ?string $description;
+    public ?array $permissions;
 }

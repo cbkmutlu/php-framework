@@ -11,260 +11,260 @@ use App\Core\Abstracts\Service;
 use App\Modules\Product\{ProductRepository, ProductRequest};
 
 class ProductService extends Service {
-   /** @var ProductRepository */
-   protected mixed $repository;
+    public function __construct(
+        protected Upload $upload,
+        protected Date $date,
+        protected ProductRepository $repository
+    ) {
+    }
 
-   public function __construct(
-      protected Upload $upload,
-      protected Date $date,
-      ProductRepository $repository
-   ) {
-      $this->repository = $repository;
-   }
+    /**
+     * Return all products
+     */
+    public function getAll(): array {
+        $result = $this->repository->findAll();
 
-   /**
-    * getAll
-    */
-   public function getAll(): array {
-      $result = $this->repository->findAll();
+        return array_map(function ($product) {
+            $product = $this->getRelation($product);
+            return $product;
+        }, $result);
+    }
 
-      return array_map(function ($product) {
-         $product = $this->getRelation($product);
-         return $product;
-      }, $result);
-   }
+    /**
+     * Return product by id
+     */
+    public function getOne(int $productId): array {
+        $result = $this->repository->findOne($productId);
 
-   /**
-    * getOne
-    */
-   public function getOne(int $productId): array {
-      $result = $this->repository->findOne($productId);
+        if (empty($result)) {
+            throw new SystemException('Record not found', 404);
+        }
 
-      if (empty($result)) {
-         throw new SystemException('Record not found', 404);
-      }
+        return $this->getRelation($result);
+    }
 
-      return $this->getRelation($result);
-   }
+    /**
+     * Create product
+     */
+    public function createProduct(ProductRequest $request): array {
+        return $this->repository->transaction(function () use ($request): array {
+            try {
+                // check fields
+                $this->checkFields($request);
 
-   /**
-    * create
-    */
-   public function createProduct(ProductRequest $request): array {
-      return $this->repository->transaction(function () use ($request): array {
-         try {
-            // check
-            $this->checkFields($request);
+                // create product
+                $create = $this->repository->create([
+                    'code'       => $request->code,
+                    'title'      => $request->title,
+                    'content'    => $request->content,
+                    'is_active'  => $request->is_active,
+                    'sort_order' => $request->sort_order,
+                    'brand_id'   => $request->brand_id,
+                    'stock'      => $request->stock,
+                    'price'      => $request->price,
+                    'date'       => $this->date->setDate($request->date)->getDate(Date::GENERIC3)
+                ]);
+                $productId = $create->lastInsertId();
 
-            // create
-            $create = $this->repository->create([
-               'code'       => $request->code,
-               'title'      => $request->title,
-               'content'    => $request->content,
-               'is_active'  => $request->is_active,
-               'sort_order' => $request->sort_order,
-               'brand_id'   => $request->brand_id,
-               'stock'      => $request->stock,
-               'price'      => $request->price,
-               'date'       => $this->date->setDate($request->date)->getDate(Date::GENERIC3)
+                // create relation
+                $product = $this->repository->findOne($productId);
+                $this->createRelation($product, $request);
+
+                // return created product with relation
+                return $this->getRelation($product);
+            } catch (SystemException $e) {
+                // unlink uploaded image
+                if (isset($request->image_path)) {
+                    $this->unlink($request->image_path);
+                }
+
+                throw $e;
+            }
+        });
+    }
+
+    /**
+     * Update product
+     */
+    public function updateProduct(ProductRequest $request): array {
+        return $this->repository->transaction(function () use ($request): array {
+            try {
+                // check fields
+                $this->checkFields($request, false);
+
+                // get product
+                $product = $this->getOne($request->id);
+
+                // filter only request properties
+                $update = $request->filter([
+                    'code'       => $request->code,
+                    'title'      => $request->title,
+                    'content'    => $request->content,
+                    'is_active'  => $request->is_active,
+                    'sort_order' => $request->sort_order,
+                    'brand_id'   => $request->brand_id,
+                    'stock'      => $request->stock,
+                    'price'      => $request->price,
+                    'date'       => $this->date->setDate($request->date)->getDate(Date::GENERIC3)
+                ]);
+
+                // update product
+                $this->repository->update($update, [
+                    'id' => $request->id
+                ]);
+
+                // sync relation
+                $this->syncRelation($product, $request);
+
+                // return updated product with relation (from getOne method)
+                return $this->getOne($request->id);
+            } catch (SystemException $e) {
+                // unlink uploaded image
+                if (isset($request->image_path)) {
+                    $this->unlink($request->image_path);
+                }
+
+                throw $e;
+            }
+        });
+    }
+
+    /**
+     * Delete product
+     */
+    public function deleteProduct(int $productId): bool {
+        return $this->repository->transaction(function () use ($productId): bool {
+            // get product and find image relation
+            $product = $this->getOne($productId);
+            $productImage = array_values(array_column($product['image_list'] ?? [], 'image_path'));
+
+            // delete product
+            $this->repository->softDelete([
+                'id' => $productId,
+                'deleted_at' => ['IS NULL']
             ]);
 
-            // create relation
-            $product = $this->repository->findOne($create->lastInsertId());
-            $this->createRelation($product, $request);
+            // delete image by product_id
+            $this->repository->hardDelete([
+                'product_id' => $productId
+            ], 'product_image');
 
-            return $this->getRelation($product);
-         } catch (SystemException $e) {
+            // delete category by product_id
+            $this->repository->hardDelete([
+                'product_id' => $productId
+            ], 'product_category');
+
             // unlink image
-            if (isset($request->image_path)) {
-               $this->unlink($request->image_path);
+            if (isset($productImage)) {
+                return $this->unlink($productImage);
             }
 
-            throw $e;
-         }
-      });
-   }
+            return true;
+        });
+    }
 
-   /**
-    * update
-    */
-   public function updateProduct(ProductRequest $request): array {
-      return $this->repository->transaction(function () use ($request): array {
-         try {
-            // check
-            $this->checkFields($request, false);
+    /**
+     * Upload product image
+     */
+    public function uploadImage(?array $files): array {
+        return $this->upload($files, 'product');
+    }
 
-            // get item
-            $product = $this->getOne($request->id);
+    /**
+     * Delete product image (unlink + delete record)
+     */
+    public function deleteImage(int $imageId): bool {
+        return $this->repository->transaction(function () use ($imageId): bool {
+            // get image
+            $productImage = $this->repository->findImagePath($imageId);
 
-            // filter list
-            $update = $request->filterArray([
-               'code'       => $request->code,
-               'title'      => $request->title,
-               'content'    => $request->content,
-               'is_active'  => $request->is_active,
-               'sort_order' => $request->sort_order,
-               'brand_id'   => $request->brand_id,
-               'stock'      => $request->stock,
-               'price'      => $request->price,
-               'date'       => $this->date->setDate($request->date)->getDate(Date::GENERIC3)
-            ]);
+            // delete image
+            $this->repository->hardDelete([
+                'id' => $imageId
+            ], 'product_image');
 
-            // update product
-            $this->repository->update($update, [
-               'id' => $request->id
-            ]);
-
-            // update relation
-            $this->updateRelation($product, $request);
-
-            return $this->getOne($request->id);
-         } catch (SystemException $e) {
             // unlink image
-            if (isset($request->image_path)) {
-               $this->unlink($request->image_path);
+            if (isset($productImage)) {
+                return $this->unlink($productImage);
             }
 
-            throw $e;
-         }
-      });
-   }
+            return true;
+        });
+    }
 
-   /**
-    * delete
-    */
-   public function deleteProduct(int $productId): bool {
-      return $this->repository->transaction(function () use ($productId): bool {
-         // get item and find image relation
-         $product = $this->getOne($productId);
-         $imagePath = array_values(array_column($product['image_list'] ?? [], 'image_path'));
+    /**
+     * Get relation
+     */
+    private function getRelation(array $product): array {
+        $productId = $product['id'];
+        $brandId = $product['brand_id'];
+        $product['category_list'] = $this->repository->findAllCategory($productId);
+        $product['image_list'] = $this->repository->findAllImage($productId);
+        $product['brand'] = $this->repository->findBrand($brandId);
+        return $product;
+    }
 
-         // delete product
-         $this->repository->softDelete([
-            'id' => $productId,
-            'deleted_at' => ['IS NULL']
-         ]);
+    /**
+     * Sync relation
+     */
+    private function syncRelation(array $product, ProductRequest $request): void {
+        $this->deleteRelation($product, $request);
+        $this->createRelation($product, $request);
+    }
 
-         // delete image by product_id
-         $this->repository->hardDelete([
-            'product_id' => $productId
-         ], 'product_image');
+    /**
+     * Create relation
+     */
+    private function createRelation(array $product, ProductRequest $request): void {
+        // category relation
+        $categoryDiff = array_values(array_diff($request->product_category ?? [], array_column($product['category_list'] ?? [], 'id')));
+        if (!empty($categoryDiff)) {
+            $fields = array_map(function ($categoryId) use ($product) {
+                return [
+                    'product_id' => $product['id'],
+                    'category_id' => $categoryId,
+                ];
+            }, $categoryDiff);
 
-         // delete category by product_id
-         $this->repository->hardDelete([
-            'product_id' => $productId
-         ], 'product_category');
+            // create category relation
+            $this->repository->create($fields, 'product_category');
+        }
 
-         // unlink image
-         if (isset($imagePath)) {
-            return $this->unlink($imagePath);
-         }
+        // image relation
+        $imageDiff = array_values(array_diff($request->image_path ?? [], array_column($product['image_list'] ?? [], 'id')));
+        if (!empty($imageDiff)) {
+            $fields = array_map(function ($imagePath) use ($product) {
+                return [
+                    'product_id' => $product['id'],
+                    'image_path' => $imagePath,
+                ];
+            }, $imageDiff);
 
-         return true;
-      });
-   }
+            // create image relation
+            $this->repository->create($fields, 'product_image');
+        }
+    }
 
-   /**
-    * upload image
-    */
-   public function uploadImage(?array $files): array {
-      return $this->upload($files, 'product');
-   }
+    /**
+     * Delete relation
+     */
+    private function deleteRelation(array $product, ProductRequest $request): void {
+        // category relation
+        $categoryDiff = array_values(array_diff(array_column($product['category_list'] ?? [], 'id'), $request->product_category ?? []));
+        if (!empty($categoryDiff)) {
+            $this->repository->hardDelete([
+                'product_id' => $product['id'],
+                'category_id' => ['IN', $categoryDiff]
+            ], 'product_category');
+        }
+    }
 
-   /**
-    * delete image
-    */
-   public function deleteImage(int $imageId): bool {
-      return $this->repository->transaction(function () use ($imageId): bool {
-         $image = $this->repository->findOneImage($imageId);
-         $imagePath = $image['image_path'] ?? null;
-
-         // delete image
-         $this->repository->hardDelete([
-            'id' => $imageId
-         ], 'product_image');
-
-         // unlink image
-         if (isset($imagePath)) {
-            return $this->unlink($imagePath);
-         }
-
-         return true;
-      });
-   }
-
-   /**
-    * get relation
-    */
-   private function getRelation(array $product): array {
-      $productId = $product['id'];
-      $product['category_list'] = $this->repository->findAllCategory($productId);
-      $product['image_list'] = $this->repository->findAllImage($productId);
-      $product['brand'] = $this->repository->findOneBrand($product['brand_id']) ?: null;
-      return $product;
-   }
-
-   /**
-    * create relation
-    */
-   private function createRelation(array $product, ProductRequest $request): void {
-      // category relation
-      $categoryDiff = array_values(array_diff($request->product_category ?? [], array_column($product['category_list'] ?? [], 'id')));
-      if (!empty($categoryDiff)) {
-         $fields = array_map(function ($categoryId) use ($product) {
-            return [
-               'product_id' => $product['id'],
-               'category_id' => $categoryId,
-            ];
-         }, $categoryDiff);
-
-         // create category relation
-         $this->repository->create($fields, 'product_category');
-      }
-
-      // image relation
-      $imageDiff = array_values(array_diff($request->image_path ?? [], array_column($product['image_list'] ?? [], 'id')));
-      if (!empty($imageDiff)) {
-         $fields = array_map(function ($imagePath) use ($product) {
-            return [
-               'product_id' => $product['id'],
-               'image_path' => $imagePath,
-            ];
-         }, $imageDiff);
-
-         // create image relation
-         $this->repository->create($fields, 'product_image');
-      }
-   }
-
-   /**
-    * update relation
-    */
-   private function updateRelation(array $product, ProductRequest $request): void {
-      $this->deleteRelation($product, $request);
-      $this->createRelation($product, $request);
-   }
-
-   /**
-    * delete relation
-    */
-   private function deleteRelation(array $product, ProductRequest $request): void {
-      // category relation
-      $categoryDiff = array_values(array_diff(array_column($product['category_list'] ?? [], 'id'), $request->product_category ?? []));
-      if (!empty($categoryDiff)) {
-         $this->repository->hardDelete([
-            'product_id' => $product['id'],
-            'category_id' => ['IN', $categoryDiff]
-         ], 'product_category');
-      }
-   }
-
-   /**
-    * check
-    */
-   private function checkFields(ProductRequest $request, bool $create = true): void {
-      $this->check([
-         'code' => $request->code
-      ], $request, $create);
-   }
+    /**
+     * Check fields
+     */
+    private function checkFields(ProductRequest $request, bool $create = true): void {
+        $this->check($this->repository, [
+            'code' => $request->code
+        ], $request, $create);
+    }
 }

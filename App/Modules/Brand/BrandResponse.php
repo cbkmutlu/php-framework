@@ -7,11 +7,11 @@ namespace App\Modules\Brand;
 use App\Core\Abstracts\{AuditTrait, Resource};
 
 class BrandResponse extends Resource {
-   use AuditTrait;
+    use AuditTrait;
 
-   public int $id;
-   public string $title;
-   public ?string $content;
-   public int $is_active;
-   public int $sort_order;
+    public int $id;
+    public string $title;
+    public ?string $content;
+    public int $is_active;
+    public int $sort_order;
 }

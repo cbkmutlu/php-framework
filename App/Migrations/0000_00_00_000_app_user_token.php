@@ -5,8 +5,8 @@ declare(strict_types=1);
 use App\Core\Abstracts\Migration;
 
 class app_user_token extends Migration {
-   public function up(): void {
-      $this->database->query("CREATE TABLE IF NOT EXISTS `app_user_token` (
+    public function up(): void {
+        $this->database->query("CREATE TABLE IF NOT EXISTS `app_user_token` (
          `id` INT AUTO_INCREMENT PRIMARY KEY,
          `jti` VARCHAR(255) NOT NULL,
          `next_id` INT NULL DEFAULT NULL,
@@ -19,9 +19,9 @@ class app_user_token extends Migration {
          `revoked_at` TIMESTAMP(3) NULL,
          `created_at` TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
       )");
-   }
+    }
 
-   public function down(): void {
-      $this->database->query("DROP TABLE IF EXISTS `app_user_token`");
-   }
+    public function down(): void {
+        $this->database->query("DROP TABLE IF EXISTS `app_user_token`");
+    }
 }

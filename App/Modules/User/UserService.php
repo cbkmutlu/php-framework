@@ -5,271 +5,360 @@ declare(strict_types=1);
 namespace App\Modules\User;
 
 use System\Crypt\Crypt;
-use System\Database\Database;
 use System\Exception\SystemException;
 use System\Gate\Gate;
 use App\Core\Abstracts\Service;
 use App\Modules\User\{UserRepository, UserRequest};
 
 class UserService extends Service {
-   /** @var UserRepository */
-   protected mixed $repository;
+    public function __construct(
+        protected Crypt $crypt,
+        protected Gate $gate,
+        protected UserRepository $repository
+    ) {
+    }
 
-   public function __construct(
-      protected Database $database,
-      protected Crypt $crypt,
-      protected Gate $gate,
-      UserRepository $repository
-   ) {
-      $this->repository = $repository;
-   }
+    /**
+     * Return all users
+     */
+    public function getAll(): array {
+        return $this->repository->findAll();
+    }
 
-   /**
-    * getAll
-    */
-   public function getAll(): array {
-      $users = $this->repository->findAll();
+    /**
+     * Return user by id
+     */
+    public function getOne(int $userId): array {
+        $result = $this->repository->findOne($userId);
 
-      // Remove password from list
-      return array_map(function ($user) {
-         unset($user['password']);
-         return $user;
-      }, $users);
-   }
+        if (empty($result)) {
+            throw new SystemException('User not found', 404);
+        }
 
-   /**
-    * getOne
-    */
-   public function getOne(int $id): array {
-      $result = $this->repository->findOneWithRelations($id);
+        $result['roles'] = $this->repository->findUserRole($userId);
+        $result['permissions'] = $this->repository->findUserPermission($userId);
 
-      if (empty($result)) {
-         throw new SystemException('User not found', 404);
-      }
+        return $result;
+    }
 
-      return $result;
-   }
+    /**
+     * Create user
+     */
+    public function createUser(UserRequest $request): array {
+        return $this->repository->transaction(function () use ($request): array {
+            // check fields
+            $this->checkFields($request);
 
-   /**
-    * create
-    */
-   public function createUser(UserRequest $request): array {
-      return $this->repository->transaction(function () use ($request): array {
-         // check
-         $this->checkFields($request);
+            // hash password
+            $password = $this->crypt->hash($request->password);
 
-         // hash password
-         $password = $this->crypt->hash($request->password);
+            // create user
+            $create = $this->repository->create([
+                'name'     => $request->name,
+                'surname'  => $request->surname,
+                'email'    => $request->email,
+                'password' => $password,
+                'status'   => $request->status
+            ]);
 
-         // create
-         $create = $this->repository->create([
-            'name'     => $request->name,
-            'surname'  => $request->surname,
-            'email'    => $request->email,
-            'password' => $password,
-            'status'   => $request->status
-         ]);
+            $userId = $create->lastInsertId();
 
-         $userId = $create->lastInsertId();
-
-         // sync roles
-         if (!empty($request->roles)) {
-            $this->repository->syncRole($userId, $request->roles);
-         }
-
-         return $this->getOne($userId);
-      });
-   }
-
-   /**
-    * update
-    */
-   public function updateUser(UserRequest $request): array {
-      return $this->repository->transaction(function () use ($request): array {
-         // check
-         $this->checkFields($request, false);
-
-         // build update data
-         $update = $request->filterArray([
-            'name'    => $request->name,
-            'surname' => $request->surname,
-            'email'   => $request->email,
-            'status'  => $request->status
-         ]);
-
-         // hash password if provided
-         if (!empty($request->password)) {
-            $update['password'] = $this->crypt->hash($request->password);
-         }
-
-         $this->repository->update($update, [
-            'id' => $request->id
-         ]);
-
-         // sync roles
-         if (isset($request->roles)) {
-            $this->repository->syncRole($request->id, $request->roles);
-            $this->gate->clearUserCache($request->id);
-         }
-
-         return $this->getOne($request->id);
-      });
-   }
-
-   /**
-    * delete (soft delete)
-    */
-   public function deleteUser(int $id): bool {
-      return $this->repository->transaction(function () use ($id): bool {
-         // check if user exists
-         $this->getOne($id);
-
-         // soft delete
-         $this->repository->softDelete([
-            'id'         => $id,
-            'deleted_at' => ['IS NULL']
-         ]);
-
-         return true;
-      });
-   }
-
-   /**
-    * syncRole
-    */
-   public function syncRole(int $userId, array $roles): array {
-      return $this->repository->transaction(function () use ($userId, $roles): array {
-         $this->getOne($userId);
-
-         // resolve role slugs to IDs
-         foreach ($roles as &$role) {
-            if (isset($role['role_id'])) {
-               $role['role_id'] = $this->resolveRole($role['role_id']);
+            // sync roles
+            if (!empty($request->roles)) {
+                $this->syncRole($userId, $request->roles);
             }
-         }
-         unset($role);
 
-         $this->repository->syncRole($userId, $roles);
-         $this->gate->clearUserCache($userId);
+            // return created user
+            return $this->getOne($userId);
+        });
+    }
 
-         return $this->getOne($userId);
-      });
-   }
+    /**
+     * Update user
+     */
+    public function updateUser(UserRequest $request): array {
+        return $this->repository->transaction(function () use ($request): array {
+            // check fields
+            $this->checkFields($request, false);
 
-   /**
-    * giveRole
-    */
-   public function giveRole(int $userId, int|string $role, ?string $scopeType = null, ?int $scopeId = null): array {
-      $role = $this->resolveRole($role);
+            // filter only request properties
+            $update = $request->filter([
+                'name'    => $request->name,
+                'surname' => $request->surname,
+                'email'   => $request->email,
+                'status'  => $request->status
+            ]);
 
-      return $this->repository->transaction(function () use ($userId, $role, $scopeType, $scopeId): array {
-         $this->getOne($userId);
-
-         // check if already assigned
-         $exists = $this->repository->findBy([
-            'user_id'    => $userId,
-            'role_id'    => $role,
-            'scope_type' => $scopeType ?? ['IS NULL'],
-            'scope_id'   => $scopeId ?? ['IS NULL']
-         ], 'app_user_role');
-         if ($exists) {
-            throw new SystemException('Role already assigned to this user', 400);
-         }
-
-         $this->repository->giveRole($userId, $role, $scopeType, $scopeId);
-         $this->gate->clearUserCache($userId);
-
-         return $this->getOne($userId);
-      });
-   }
-
-   /**
-    * revokeRole
-    */
-   public function revokeRole(int $userId, int|string $role, ?string $scopeType = null, ?int $scopeId = null): array {
-      $role = $this->resolveRole($role);
-
-      return $this->repository->transaction(function () use ($userId, $role, $scopeType, $scopeId): array {
-         $this->getOne($userId);
-
-         $this->repository->revokeRole($userId, $role, $scopeType, $scopeId);
-         $this->gate->clearUserCache($userId);
-
-         return $this->getOne($userId);
-      });
-   }
-
-   /**
-    * syncPermission
-    */
-   public function syncPermission(int $userId, array $permissions): array {
-      return $this->repository->transaction(function () use ($userId, $permissions): array {
-         $this->getOne($userId);
-
-         // resolve permission IDs or slugs to IDs
-         foreach ($permissions as &$permission) {
-            if (isset($permission['permission_id'])) {
-               $permission['permission_id'] = $this->resolvePermission($permission['permission_id']);
+            // hash password if provided
+            if (!empty($request->password)) {
+                $update['password'] = $this->crypt->hash($request->password);
             }
-         }
-         unset($permission);
 
-         $this->repository->syncPermission($userId, $permissions);
-         $this->gate->clearUserCache($userId);
+            // update user
+            $this->repository->update($update, [
+                'id' => $request->id
+            ]);
 
-         return $this->getOne($userId);
-      });
-   }
+            // sync roles
+            if (isset($request->roles)) {
+                $this->syncRole($request->id, $request->roles);
+                $this->gate->clearUserCache($request->id);
+            }
 
-   /**
-    * givePermission
-    */
-   public function givePermission(int $userId, int|string $permission, string $type = 'allow', ?string $scopeType = null, ?int $scopeId = null): array {
-      $permission = $this->resolvePermission($permission);
+            // return updated user
+            return $this->getOne($request->id);
+        });
+    }
 
-      return $this->repository->transaction(function () use ($userId, $permission, $type, $scopeType, $scopeId): array {
-         $this->getOne($userId);
+    /**
+     * Delete user (soft delete)
+     */
+    public function deleteUser(int $userId): bool {
+        return $this->repository->transaction(function () use ($userId): bool {
+            // soft delete
+            $this->repository->softDelete([
+                'id'         => $userId,
+                'deleted_at' => ['IS NULL']
+            ]);
 
-         // check if already assigned
-         $exists = $this->repository->findBy([
-            'user_id'       => $userId,
-            'permission_id' => $permission,
-            'scope_type'    => $scopeType ?? ['IS NULL'],
-            'scope_id'      => $scopeId ?? ['IS NULL']
-         ], 'app_user_permission');
-         if ($exists) {
-            throw new SystemException('Permission already assigned to this user', 400);
-         }
+            return true;
+        });
+    }
 
-         $this->repository->givePermission($userId, $permission, $type, $scopeType, $scopeId);
-         $this->gate->clearUserCache($userId);
+    /**
+     * Sync role
+     */
+    public function syncRole(int $userId, array $roles): array {
+        return $this->repository->transaction(function () use ($userId, $roles): array {
+            // delete all roles
+            $this->repository->hardDelete([
+                'user_id' => $userId
+            ], 'app_user_role');
 
-         return $this->getOne($userId);
-      });
-   }
+            // create roles (bulk)
+            $create = [];
+            foreach ($roles as $role) {
+                $create[] = [
+                    'user_id'    => $userId,
+                    'role_id'    => $this->resolveRole($role),
+                    'scope_type' => $role->scope_type,
+                    'scope_id'   => $role->scope_id
+                ];
+            }
+            $this->repository->create($create, 'app_user_role');
 
-   /**
-    * revokePermission
-    */
-   public function revokePermission(int $userId, int|string $permission, ?string $scopeType = null, ?int $scopeId = null): array {
-      $permission = $this->resolvePermission($permission);
+            // clear cache
+            $this->gate->clearUserCache($userId);
 
-      return $this->repository->transaction(function () use ($userId, $permission, $scopeType, $scopeId): array {
-         $this->getOne($userId);
+            // return updated user
+            return $this->getOne($userId);
+        });
+    }
 
-         $this->repository->revokePermission($userId, $permission, $scopeType, $scopeId);
-         $this->gate->clearUserCache($userId);
+    /**
+     * Give role to user
+     */
+    public function giveRole(int $userId, int|string $role, ?string $scopeType = null, ?int $scopeId = null): array {
+        // resolve role
+        $roleId = $this->resolveRole($role);
 
-         return $this->getOne($userId);
-      });
-   }
+        return $this->repository->transaction(function () use ($userId, $roleId, $scopeType, $scopeId): array {
+            // check relation
+            if ($this->repository->hasRoleRelation($userId, $roleId, $scopeType, $scopeId)) {
+                throw new SystemException('Role already assigned to this user', 400);
+            }
 
-   /**
-    * check
-    */
-   private function checkFields(UserRequest $request, bool $create = true): void {
-      $this->check([
-         'email' => $request->email
-      ], $request, $create);
-   }
+            // give role and clear cache
+            $this->repository->create([
+                'user_id'    => $userId,
+                'role_id'    => $roleId,
+                'scope_type' => $scopeType,
+                'scope_id'   => $scopeId
+            ], 'app_user_role');
+            $this->gate->clearUserCache($userId);
+
+            // return updated user
+            return $this->getOne($userId);
+        });
+    }
+
+    /**
+     * Revoke role from user
+     */
+    public function revokeRole(int $userId, int|string $role, ?string $scopeType = null, ?int $scopeId = null): array {
+        // resolve role
+        $roleId = $this->resolveRole($role);
+
+        return $this->repository->transaction(function () use ($userId, $roleId, $scopeType, $scopeId): array {
+            // check relation
+            if ($this->repository->hasRoleRelation($userId, $roleId, $scopeType, $scopeId) === false) {
+                throw new SystemException('Role not assigned to this user', 400);
+            }
+
+            // revoke role
+            $this->repository->hardDelete(array_filter([
+                'user_id'    => $userId,
+                'role_id'    => $roleId,
+                'scope_type' => $scopeType,
+                'scope_id'   => $scopeId
+            ], function ($value) {
+                return $value !== null;
+            }), 'app_user_role');
+
+            // clear cache
+            $this->gate->clearUserCache($userId);
+
+            // return updated user
+            return $this->getOne($userId);
+        });
+    }
+
+    /**
+     * Sync permissions for user
+     */
+    public function syncPermission(int $userId, array $permissions): array {
+        return $this->repository->transaction(function () use ($userId, $permissions): array {
+            // delete all permissions
+            $this->repository->hardDelete([
+                'user_id' => $userId
+            ], 'app_user_permission');
+
+            // create permissions (bulk)
+            $create = [];
+            foreach ($permissions as $permission) {
+                $create[] = [
+                    'user_id'       => $userId,
+                    'permission_id' => $this->resolvePermission($permission),
+                    'type'          => $permission['type'],
+                    'scope_type'    => $permission['scope_type'] ?? null,
+                    'scope_id'      => $permission['scope_id'] ?? null
+                ];
+            }
+            $this->repository->create($create, 'app_user_permission');
+
+            // clear cache
+            $this->gate->clearUserCache($userId);
+
+            // return updated user
+            return $this->getOne($userId);
+        });
+    }
+
+    /**
+     * Give permission to user
+     */
+    public function givePermission(int $userId, int|string $permission, string $type = 'allow', ?string $scopeType = null, ?int $scopeId = null): array {
+        // resolve permission
+        $permissionId = $this->resolvePermission($permission);
+
+        return $this->repository->transaction(function () use ($userId, $permissionId, $type, $scopeType, $scopeId): array {
+            // check relation
+            if ($this->repository->hasPermissionRelation($userId, $permissionId, $scopeType, $scopeId)) {
+                throw new SystemException('Permission already assigned to this user', 400);
+            }
+
+            // give permission
+            $this->repository->create([
+                'user_id'       => $userId,
+                'permission_id' => $permissionId,
+                'type'          => $type,
+                'scope_type'    => $scopeType,
+                'scope_id'      => $scopeId
+            ], 'app_user_permission');
+
+            // clear cache
+            $this->gate->clearUserCache($userId);
+
+            // return updated user
+            return $this->getOne($userId);
+        });
+    }
+
+    /**
+     * Revoke permission from user
+     */
+    public function revokePermission(int $userId, int|string $permission, ?string $scopeType = null, ?int $scopeId = null): array {
+        // resolve permission
+        $permissionId = $this->resolvePermission($permission);
+
+        return $this->repository->transaction(function () use ($userId, $permissionId, $scopeType, $scopeId): array {
+            // revoke permission
+            $this->repository->hardDelete(array_filter([
+                'user_id'       => $userId,
+                'permission_id' => $permissionId,
+                'scope_type'    => $scopeType,
+                'scope_id'      => $scopeId
+            ], function ($value) {
+                return $value !== null;
+            }), 'app_user_permission');
+
+            // clear cache
+            $this->gate->clearUserCache($userId);
+
+            // return updated user
+            return $this->getOne($userId);
+        });
+    }
+
+    public function getPermission(int $userId): array {
+        $data = [
+            'id' => $userId,
+            'roles' => [],
+            'permissions' => []
+        ];
+
+        $userRoles = $this->repository->findUserRole($userId);
+        $userPermissions = $this->repository->findUserPermission($userId);
+        $rolePermissions = $this->repository->findRolePermission($userId);
+
+        $data['roles'] = $userRoles;
+        $data['permissions'] = array_merge($rolePermissions, $userPermissions);
+
+        return $data;
+    }
+
+    /**
+     * Check fields
+     */
+    private function checkFields(UserRequest $request, bool $create = true): void {
+        $this->check($this->repository, [
+            'email' => $request->email
+        ], $request, $create);
+    }
+
+    /**
+     * Resolve role
+     */
+    private function resolveRole(int|string $role): int {
+        if (is_numeric($role)) {
+            return (int) $role;
+        }
+
+        $role = $this->repository->findBy([
+            'slug' => $role
+        ], 'app_role');
+        if (!$role) {
+            throw new SystemException('Role ' . $role . ' not found', 404);
+        }
+
+        return $role['id'];
+    }
+
+    /**
+     * resolvePermission
+     */
+    private function resolvePermission(int|string $permission): int {
+        if (is_numeric($permission)) {
+            return (int) $permission;
+        }
+
+        $permission = $this->repository->findBy([
+            'slug' => $permission
+        ], 'app_permission');
+        if (!$permission) {
+            throw new SystemException('Permission ' . $permission . ' not found', 404);
+        }
+
+        return $permission['id'];
+    }
 }

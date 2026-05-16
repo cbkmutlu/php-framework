@@ -29,17 +29,17 @@ use OpenApi\Generator;
  * @OA\OpenApi(security={{"BearerAuth": {}}})
  */
 class SwaggerController extends Controller {
-   /**
-    * index
-    */
-   public function index() {
-      if (get_env('APP_ENV') === 'development') {
-         $asset = '/swagger/';
-      } else {
-         $asset = 'Public/swagger/';
-      }
+    /**
+     * index
+     */
+    public function index() {
+        if (get_env('APP_ENV') === 'development') {
+            $asset = '/swagger/';
+        } else {
+            $asset = 'Public/swagger/';
+        }
 
-      echo '<!DOCTYPE html>
+        echo '<!DOCTYPE html>
       <html lang="en">
 
       <head>
@@ -60,28 +60,28 @@ class SwaggerController extends Controller {
       </body>
 
       </html>';
-   }
+    }
 
-   /**
-    * list
-    */
-   public function list() {
-      header('Content-Type: application/json; charset=UTF-8');
-      print(json_encode([
-         ['url' => './swagger/json', 'name' => 'Swagger'],
-      ]));
-   }
+    /**
+     * list
+     */
+    public function list() {
+        header('Content-Type: application/json; charset=UTF-8');
+        print(json_encode([
+            ['url' => './swagger/json', 'name' => 'Swagger'],
+        ]));
+    }
 
-   /**
-    * json
-    */
-   public function json() {
-      $generator = new Generator();
-      $openapi = $generator->generate([
-         APP_DIR . '/Modules'
-      ]);
+    /**
+     * json
+     */
+    public function json() {
+        $generator = new Generator();
+        $openapi = $generator->generate([
+            APP_DIR . '/Modules'
+        ]);
 
-      header('Content-Type: application/json; charset=UTF-8');
-      print($openapi->toJson());
-   }
+        header('Content-Type: application/json; charset=UTF-8');
+        print($openapi->toJson());
+    }
 }

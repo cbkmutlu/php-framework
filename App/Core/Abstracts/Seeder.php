@@ -7,13 +7,13 @@ namespace App\Core\Abstracts;
 use System\Database\Database;
 
 abstract class Seeder {
-   public function __construct(
-      protected Database $database
-   ) {
-   }
+    public function __construct(
+        protected Database $database
+    ) {
+    }
 
-   /**
-    * Seed çalıştırır
-    */
-   abstract public function run(): void;
+    /**
+     * Runs the seed
+     */
+    abstract public function run(): void;
 }

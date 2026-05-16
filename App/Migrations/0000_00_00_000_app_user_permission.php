@@ -5,8 +5,8 @@ declare(strict_types=1);
 use App\Core\Abstracts\Migration;
 
 class app_user_permission extends Migration {
-   public function up(): void {
-      $this->database->query("CREATE TABLE IF NOT EXISTS `app_user_permission` (
+    public function up(): void {
+        $this->database->query("CREATE TABLE IF NOT EXISTS `app_user_permission` (
          `user_id` INT NOT NULL,
          `permission_id` INT NOT NULL,
          `type` ENUM('allow', 'deny') NOT NULL DEFAULT 'allow',
@@ -16,9 +16,9 @@ class app_user_permission extends Migration {
          CONSTRAINT `fk_app_user_permission_user` FOREIGN KEY (`user_id`) REFERENCES `app_user`(`id`) ON DELETE CASCADE,
          CONSTRAINT `fk_app_user_permission_permission` FOREIGN KEY (`permission_id`) REFERENCES `app_permission`(`id`) ON DELETE CASCADE
       )");
-   }
+    }
 
-   public function down(): void {
-      $this->database->query("DROP TABLE IF EXISTS `app_user_permission`");
-   }
+    public function down(): void {
+        $this->database->query("DROP TABLE IF EXISTS `app_user_permission`");
+    }
 }

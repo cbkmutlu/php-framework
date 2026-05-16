@@ -7,38 +7,38 @@ namespace App\Modules\Permission;
 use App\Core\Abstracts\Policy;
 
 class PermissionPolicy extends Policy {
-   /**
-    * Listeleme yetkisi
-    */
-   public function viewAny(?array $user): bool {
-      return $this->hasPermission($user, 'permission:viewAny');
-   }
+    /**
+     * View any permission (listing)
+     */
+    public function viewAny(?array $user): bool {
+        return $this->hasPermission($user, 'permission:viewAny');
+    }
 
-   /**
-    * Görüntüleme yetkisi
-    */
-   public function view(?array $user, mixed $model = null): bool {
-      return $this->hasPermission($user, 'permission:view');
-   }
+    /**
+     * View permission
+     */
+    public function view(?array $user, mixed $model = null): bool {
+        return $this->hasPermission($user, 'permission:view');
+    }
 
-   /**
-    * Oluşturma yetkisi
-    */
-   public function create(?array $user): bool {
-      return $this->hasPermission($user, 'permission:create');
-   }
+    /**
+     * Create permission
+     */
+    public function create(?array $user): bool {
+        return $this->hasPermission($user, 'permission:create');
+    }
 
-   /**
-    * Güncelleme yetkisi
-    */
-   public function update(?array $user, mixed $model = null): bool {
-      return $this->hasPermission($user, 'permission:update');
-   }
+    /**
+     * Update permission
+     */
+    public function update(?array $user, mixed $model = null): bool {
+        return $this->hasPermission($user, 'permission:update');
+    }
 
-   /**
-    * Silme yetkisi
-    */
-   public function delete(?array $user, mixed $model = null): bool {
-      return $this->hasPermission($user, 'permission:delete');
-   }
+    /**
+     * Delete permission
+     */
+    public function delete(?array $user, mixed $model = null): bool {
+        return $this->hasPermission($user, 'permission:delete');
+    }
 }

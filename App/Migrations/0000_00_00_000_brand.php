@@ -5,8 +5,8 @@ declare(strict_types=1);
 use App\Core\Abstracts\Migration;
 
 class brand extends Migration {
-   public function up(): void {
-      $this->database->query("CREATE TABLE IF NOT EXISTS `brand` (
+    public function up(): void {
+        $this->database->query("CREATE TABLE IF NOT EXISTS `brand` (
          `id` INT AUTO_INCREMENT PRIMARY KEY,
          `title` VARCHAR(100) NOT NULL,
          `content` TEXT NULL DEFAULT NULL,
@@ -15,18 +15,18 @@ class brand extends Migration {
          {$this->defaults()}
       )");
 
-      $this->database->table('brand')
-         ->insert([
-            'title' => ['Marka Başlığı'],
-            'content' => ['Marka Açıklaması'],
-            'is_active' => [1],
-            'sort_order' => [1]
-         ])
-         ->prepare()
-         ->execute();
-   }
+        $this->database->table('brand')
+            ->insert([
+                'title' => ['Marka Başlığı'],
+                'content' => ['Marka Açıklaması'],
+                'is_active' => [1],
+                'sort_order' => [1]
+            ])
+            ->prepare()
+            ->execute();
+    }
 
-   public function down(): void {
-      $this->database->query("DROP TABLE IF EXISTS `brand`");
-   }
+    public function down(): void {
+        $this->database->query("DROP TABLE IF EXISTS `brand`");
+    }
 }

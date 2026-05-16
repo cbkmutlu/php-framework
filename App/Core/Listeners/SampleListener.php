@@ -6,7 +6,7 @@ namespace App\Core\Listeners;
 
 class SampleListener {
 
-   public function handle() {
-      // Handle the event
-   }
+    public function handle() {
+        // Handle the event
+    }
 }

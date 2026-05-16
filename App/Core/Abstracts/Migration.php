@@ -7,26 +7,26 @@ namespace App\Core\Abstracts;
 use System\Database\Database;
 
 abstract class Migration {
-   public function __construct(
-      protected Database $database
-   ) {
-   }
+    public function __construct(
+        protected Database $database
+    ) {
+    }
 
-   /**
-    * Migration çalıştırır
-    */
-   abstract public function up(): void;
+    /**
+     * Run migration
+     */
+    abstract public function up(): void;
 
-   /**
-    * Migration geri alır
-    */
-   abstract public function down(): void;
+    /**
+     * Rollback migration
+     */
+    abstract public function down(): void;
 
-   /**
-    * Migration için varsayılan alanları döndürür
-    */
-   protected function defaults(): string {
-      return "
+    /**
+     * Default fields for migration
+     */
+    protected function defaults(): string {
+        return "
          `deleted_at` TIMESTAMP NULL DEFAULT NULL,
          `deleted_by` INT NULL DEFAULT NULL,
          `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -34,5 +34,5 @@ abstract class Migration {
          `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
          `updated_by` INT NOT NULL DEFAULT 0
       ";
-   }
+    }
 }
