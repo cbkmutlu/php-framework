@@ -20,13 +20,13 @@ abstract class Service {
     * Kayıt kontrolü yapar.
     *
     * @param array $fields `['key' => 'value']` gibi olmalıdır
-    * @param Resource $data
+    * @param Resource $resource
     * @param bool $create yeni kayıt oluşturursa `true` güncelleme yaparsa `false`
     *
     * @throws SystemException kayıt varsa oluşturma için 400 hatası fırlatır
     * @throws SystemException kayıt uyuşmazsa güncelleme için 404 hatası fırlatır
     */
-   protected function check(array $fields, Resource $data, bool $create = true): void {
+   protected function check(array $fields, Resource $resource, bool $create = true): void {
       $exist = $this->repository->findBy($fields);
 
       if ($create) {
@@ -34,7 +34,7 @@ abstract class Service {
             throw new SystemException('Record already exists', 400);
          }
       } else {
-         $id = $data->toArray()['id'];
+         $id = $resource->property('id');
          if (!$this->repository->findOne($id)) {
             throw new SystemException('Record not found', 404);
          }
@@ -135,47 +135,5 @@ abstract class Service {
       }
 
       return $this->upload->unlink($files);
-   }
-
-   /**
-    * Role ID'sini çözer.
-    * int gelirse aynen döner, string gelirse slug ile DB'den ID çözer.
-    *
-    * @param int|string $role Role ID veya slug
-    * @return int
-    * @throws SystemException role bulunamazsa 404 hatası fırlatır
-    */
-   protected function resolveRole(int|string $role): int {
-      if (is_int($role)) {
-         return $role;
-      }
-
-      $result = $this->repository->findBy(['slug' => $role], 'app_role');
-      if (!$result) {
-         throw new SystemException("Role not found: {$role}", 404);
-      }
-
-      return (int) $result['id'];
-   }
-
-   /**
-    * Permission ID'sini çözer.
-    * int gelirse aynen döner, string gelirse slug ile DB'den ID çözer.
-    *
-    * @param int|string $permission Permission ID veya slug
-    * @return int
-    * @throws SystemException permission bulunamazsa 404 hatası fırlatır
-    */
-   protected function resolvePermission(int|string $permission): int {
-      if (is_int($permission)) {
-         return $permission;
-      }
-
-      $result = $this->repository->findBy(['slug' => $permission], 'app_permission');
-      if (!$result) {
-         throw new SystemException("Permission not found: {$permission}", 404);
-      }
-
-      return (int) $result['id'];
    }
 }

@@ -28,85 +28,31 @@ abstract class Resource {
    }
 
    /**
-    * Nesnenin boş olmayan özelliklerini dizi olarak döner.
-    *
-    * @return array boş olmayan özellikler dizisi
+    * Nesnenin boş olmayan özelliklerini döner.
     */
-   final public function toArray(): array {
-      return array_filter(get_object_vars($this), function ($value) {
+   final public function property(?string $key = null): mixed {
+      $data = array_filter(get_object_vars($this), function ($value) {
          return $value !== null && $value !== '' && $value !== [];
       });
+      if ($key !== null) {
+         return $data[$key] ?? null;
+      }
+
+      return $data;
    }
 
    /**
     * Dizi içindeki nesnede bulunmayan özellikleri filtreler.
-    *
-    * @param array $data filtrelenecek veri dizisi
-    * @return array nesnenin özelliklerine ait filtrelenmiş dizi
     */
-   final public function filterArray(array $data): array {
-      $result = [];
-      foreach ($data as $key => $value) {
-         if (in_array($key, $this->keys, true)) {
-            $result[$key] = $value;
-         }
-      }
-      return $result;
+   final public function intersect(array $data): array {
+      return array_intersect_key($data, array_flip($this->keys));
    }
 
    /**
-    * Verilen dizi içindeki değerleri, nesnenin özelliklerine atar.
-    * Reflection kullanarak tüm özellikleri tarar ve tip kontrolü yapar.
-    *
-    * @param array $data özelliklerine değer atanacak veri dizisi
-    */
-   final public function withData(array $data): self {
-      $this->keys = [];
-      $reflection = new ReflectionClass(static::class);
-
-      foreach ($reflection->getProperties() as $property) {
-         $prop = $property->getName();
-         if (!array_key_exists($prop, $data)) {
-            continue;
-         }
-         $value = $data[$prop];
-         $type = $property->getType();
-         $name = $property->getType()->getName();
-
-         if ($type && $name === Collection::class && is_array($value)) {
-            $collection = $this->$prop;
-            $collection->setItem($value);
-            $this->keys[] = $prop;
-            continue;
-         }
-
-         if ($type && is_subclass_of($name, Resource::class) && is_array($value)) {
-            $obj = new $name();
-            $obj->withData($data[$prop]);
-            $this->$prop = $obj;
-            $this->keys[] = $prop;
-            continue;
-         }
-
-         if ($name === 'float') {
-            $value = (float) $value;
-         }
-
-         $this->$prop = $value;
-         $this->keys[] = $prop;
-      }
-
-      return $this;
-   }
-
-   /**
-    * Verilen dizi içindeki değerleri, nesnenin özelliklerine atar.
+    * Dizi içindeki değerleri nesnenin özelliklerine atar.
     * Sadece nesnede var olan özellikler güncellenir, diğer anahtarlar yok sayılır.
-    *
-    * @param array $data özelliklerine değer atanacak veri dizisi
-    * @throws SystemException doğrulama başarısız olursa 400 hatası fırlatır
     */
-   final public function assignData(array $data): void {
+   final public function fill(array $data): void {
       if (!empty($this->rules())) {
          $this->validation->data($data);
          $this->validation->rules($this->rules());
@@ -128,6 +74,49 @@ abstract class Resource {
             $this->$prop = $this->$prop ?? $default;
          }
       }
+   }
+
+   /**
+    * Verilen dizi içindeki değerleri, nesnenin özelliklerine atar.
+    * Reflection kullanarak tüm özellikleri tarar ve tip kontrolü yapar.
+    */
+   final public function map(array $data): self {
+      $this->keys = [];
+      $reflection = new ReflectionClass(static::class);
+
+      foreach ($reflection->getProperties() as $property) {
+         $prop = $property->getName();
+         if (!array_key_exists($prop, $data)) {
+            continue;
+         }
+         $value = $data[$prop];
+         $type = $property->getType();
+         $name = $property->getType()->getName();
+
+         if ($type && $name === Collection::class && is_array($value)) {
+            $collection = $this->$prop;
+            $collection->setItem($value);
+            $this->keys[] = $prop;
+            continue;
+         }
+
+         if ($type && is_subclass_of($name, Resource::class) && is_array($value)) {
+            $obj = new $name();
+            $obj->map($data[$prop]);
+            $this->$prop = $obj;
+            $this->keys[] = $prop;
+            continue;
+         }
+
+         if ($name === 'float') {
+            $value = (float) $value;
+         }
+
+         $this->$prop = $value;
+         $this->keys[] = $prop;
+      }
+
+      return $this;
    }
 
    /**

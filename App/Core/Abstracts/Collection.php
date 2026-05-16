@@ -31,7 +31,7 @@ final class Collection implements IteratorAggregate, JsonSerializable {
          $obj = new $collection();
          if (is_subclass_of($obj, Resource::class)) {
             if (is_array($item)) {
-               $obj->withData($item);
+               $obj->map($item);
                $this->items[] = $obj;
             }
          }
