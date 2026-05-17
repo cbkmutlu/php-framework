@@ -12,9 +12,7 @@ class AuthorizationSeeder extends Seeder {
         $config = import_config('authorization');
 
         try {
-            // ----------------------------------------
-            // Yetkileri ekle
-            // ----------------------------------------
+            // Add permissions
             $permissions = $config['permissions'] ?? [];
             $permissionSlugs = array_keys($permissions);
             $permissionPlaceholders = implode(',', array_fill(0, count($permissionSlugs), '?'));
@@ -45,9 +43,7 @@ class AuthorizationSeeder extends Seeder {
             }
             echo "· Permissions seeded\n";
 
-            // ----------------------------------------
-            // Rolleri ekle
-            // ----------------------------------------
+            // Add roles
             $roles = $config['roles'] ?? [];
             $roleSlugs = array_keys($roles);
             $rolePlaceholders = implode(',', array_fill(0, count($roleSlugs), '?'));
@@ -88,9 +84,7 @@ class AuthorizationSeeder extends Seeder {
             }
             echo "· Roles seeded\n";
 
-            // ----------------------------------------
-            // Kullanıcı rollerini ata
-            // ----------------------------------------
+            // Assign user roles
             $users = $config['users'] ?? [];
             $userSlugs = array_unique(array_values($users));
             $userPlaceholders = implode(',', array_fill(0, count($userSlugs), '?'));

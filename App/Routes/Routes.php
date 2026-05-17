@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Core\Middlewares\{Auth, RateLimit};
 use App\Modules\Auth\AuthController;
+use App\Modules\Approval\ApprovalController;
 use App\Modules\Brand\BrandController;
 use App\Modules\Category\CategoryController;
 use App\Modules\File\FileController;
@@ -30,6 +31,16 @@ $router->prefix('api/v1/auth')->middleware([Auth::class])->group(function () use
 $router->prefix('api/v1/file')->middleware([Auth::class])->group(function () use ($router) {
     $router->post('/', [FileController::class, 'uploadFile']);
     $router->patch('/', [FileController::class, 'unlinkFile']);
+});
+
+// Approval routes
+$router->prefix('api/v1/approval')->middleware([Auth::class])->group(function () use ($router) {
+    $router->get('/pending', [ApprovalController::class, 'getPending']);
+    $router->get('/my-flows', [ApprovalController::class, 'getMyFlows']);
+    $router->get('/{id}', [ApprovalController::class, 'getById'])->where(['id' => '([0-9]+)']);
+    $router->post('/{id}/approve', [ApprovalController::class, 'approve'])->where(['id' => '([0-9]+)']);
+    $router->post('/{id}/reject', [ApprovalController::class, 'reject'])->where(['id' => '([0-9]+)']);
+    $router->post('/{id}/cancel', [ApprovalController::class, 'cancel'])->where(['id' => '([0-9]+)']);
 });
 
 // Product routes

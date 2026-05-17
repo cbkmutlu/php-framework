@@ -68,7 +68,7 @@ class SwaggerController extends Controller {
     public function list() {
         header('Content-Type: application/json; charset=UTF-8');
         print(json_encode([
-            ['url' => './swagger/json', 'name' => 'Swagger'],
+            ['url' => './swagger/json', 'name' => 'Swagger']
         ]));
     }
 

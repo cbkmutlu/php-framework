@@ -8,14 +8,14 @@ return [
             'scope'        => 'system',
             'display_name' => 'Super Administrator',
             'description'  => 'Tüm yetkilere sahip',
-            'permissions'  => '*',
+            'permissions'  => '*'
         ],
 
         'admin' => [
             'scope'        => 'system',
             'display_name' => 'Administrator',
             'description'  => 'Sistem yöneticisi',
-            'permissions'  => '*',
+            'permissions'  => '*'
         ]
     ],
 
@@ -64,6 +64,6 @@ return [
         'permission:view'    => 'View Permission',
         'permission:create'  => 'Create Permission',
         'permission:update'  => 'Update Permission',
-        'permission:delete'  => 'Delete Permission',
+        'permission:delete'  => 'Delete Permission'
     ]
 ];
