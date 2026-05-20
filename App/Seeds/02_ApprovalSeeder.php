@@ -22,8 +22,16 @@ class ApprovalSeeder extends Seeder {
 
             foreach ($templates as $entityType => $actions) {
                 foreach ($actions as $action => $steps) {
-                    foreach ($steps as $order => $step) {
+                    foreach ($steps as $step) {
                         $assigneeId = $step['assignee_id'];
+
+                        // Step is now mandatory in template
+                        if (!isset($step['step'])) {
+                            echo "✗ Step order missing for {$entityType}:{$action}, skipping\n";
+                            continue;
+                        }
+
+                        $stepOrder = (int) $step['step'];
 
                         // If assignee is role slug, resolve to role_id
                         if ($step['assignee_type'] === 'role' && !is_numeric($assigneeId)) {
@@ -43,7 +51,7 @@ class ApprovalSeeder extends Seeder {
                         $bulk[] = [
                             'entity_type'   => $entityType,
                             'action'        => $action,
-                            'step_order'    => $order + 1,
+                            'step_order'    => $stepOrder,
                             'assignee_type' => $step['assignee_type'],
                             'assignee_id'   => $assigneeId,
                         ];

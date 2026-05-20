@@ -10,6 +10,7 @@ enum ApprovalStatusEnum: string {
     case REJECTED  = 'rejected';
     case CANCELLED = 'cancelled';
     case SKIPPED   = 'skipped';
+    case SENT_BACK = 'sent_back';
 
     /**
      * Resolve enum from string or get string from enum
@@ -26,7 +27,8 @@ enum ApprovalStatusEnum: string {
             self::PENDING->value,
             self::APPROVED->value,
             self::REJECTED->value,
-            self::CANCELLED->value
+            self::CANCELLED->value,
+            self::SENT_BACK->value
         ];
     }
 
@@ -38,7 +40,8 @@ enum ApprovalStatusEnum: string {
             self::PENDING->value,
             self::APPROVED->value,
             self::REJECTED->value,
-            self::SKIPPED->value
+            self::SKIPPED->value,
+            self::SENT_BACK->value
         ];
     }
 }

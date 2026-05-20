@@ -53,6 +53,52 @@ class ApprovalRepository extends Repository {
     }
 
     /**
+     * Find specific pending step for a user in the current flow level
+     */
+    public function findUserStepAtCurrentLevel(int $flowId, int $stepOrder, int $userId): ?array {
+        return $this->database
+            ->prepare("SELECT s.* 
+                FROM approval_step s
+                LEFT JOIN app_user_role ur ON ur.user_id = :user_id_role
+                    AND s.assignee_type = 'role'
+                    AND s.assignee_id = ur.role_id
+                WHERE s.flow_id = :flow_id
+                AND s.step_order = :step_order
+                AND s.status = 'pending'
+                AND (
+                    (s.assignee_type = 'user' AND s.assignee_id = :user_id)
+                    OR (s.assignee_type = 'role' AND ur.id IS NOT NULL)
+                )
+                LIMIT 1")
+            ->execute([
+                'flow_id' => $flowId,
+                'step_order' => $stepOrder,
+                'user_id' => $userId,
+                'user_id_role' => $userId,
+            ])
+            ->fetchOne();
+    }
+
+    /**
+     * Count remaining pending steps in a specific order
+     */
+    public function countPendingStepsInOrder(int $flowId, int $stepOrder): int {
+        $result = $this->database
+            ->prepare("SELECT COUNT(*) as total 
+                FROM approval_step 
+                WHERE flow_id = :flow_id 
+                AND step_order = :step_order 
+                AND status = 'pending'")
+            ->execute([
+                'flow_id' => $flowId,
+                'step_order' => $stepOrder,
+            ])
+            ->fetchOne();
+
+        return (int) ($result['total'] ?? 0);
+    }
+
+    /**
      * Find all steps of a flow
      */
     public function findStepsByFlow(int $flowId): array {

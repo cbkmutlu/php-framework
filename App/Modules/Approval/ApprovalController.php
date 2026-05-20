@@ -95,6 +95,30 @@ class ApprovalController extends Controller {
     }
 
     /**
+     * @OA\Post(tags={"Approval"}, path="/approval/{id}/send-back", summary="Süreci bir önceki adıma geri gönder",
+     *    @OA\Response(response=200, description="Success"),
+     *    @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *    @OA\RequestBody(required=true, @OA\JsonContent(
+     *       @OA\Property(property="comment", type="string", example="Lütfen X belgesini ekleyiniz")
+     *    ))
+     * )
+     */
+    public function sendBack(int $id): void {
+        $user = $this->request->getUser();
+        $userId = (int) $user['id'];
+        $json = $this->request->json();
+
+        $request = new ApprovalRequest();
+        $request->fill($json);
+
+        $result = $this->service->sendBack($id, $userId, $request);
+        $response = new ApprovalResponse();
+        $response->map($result);
+
+        $this->response->json($response);
+    }
+
+    /**
      * @OA\Post(tags={"Approval"}, path="/approval/{id}/reject", summary="Adımı reddet",
      *    @OA\Response(response=200, description="Success"),
      *    @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),

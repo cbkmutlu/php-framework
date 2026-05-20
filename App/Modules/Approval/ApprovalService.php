@@ -72,12 +72,11 @@ class ApprovalService extends Service {
                 throw new SystemException('Bu onay süreci aktif değil', 400);
             }
 
-            $currentStep = $this->repository->findCurrentStep($flowId);
-            if (!$currentStep) {
-                throw new SystemException('Aktif adım bulunamadı', 400);
+            // Find the specific step for this user at current level
+            $userStep = $this->repository->findUserStepAtCurrentLevel($flowId, (int) $flow['current_step'], $userId);
+            if (!$userStep) {
+                throw new SystemException('Bu aşamada onay bekleyen adımınız bulunamadı', 403);
             }
-
-            $this->validateAssignee($currentStep, $userId);
 
             // Update step as approved
             $this->repository->update([
@@ -85,20 +84,106 @@ class ApprovalService extends Service {
                 'decided_by' => $userId,
                 'decided_at' => [date('Y-m-d H:i:s')],
                 'comment'    => $request->comment,
-            ], ['id' => $currentStep['id']], 'approval_step');
+            ], ['id' => $userStep['id']], 'approval_step');
 
-            // Check if all steps are done
-            if ($flow['current_step'] >= $flow['total_steps']) {
-                $this->repository->update([
-                    'status' => ApprovalStatusEnum::APPROVED->value,
-                ], ['id' => $flowId]);
+            // Check if there are other parallel steps pending in the same order
+            $pendingCount = $this->repository->countPendingStepsInOrder($flowId, (int) $flow['current_step']);
 
-                $this->executeCallback($flow);
-            } else {
-                $this->repository->update([
-                    'current_step' => $flow['current_step'] + 1,
-                ], ['id' => $flowId]);
+            if ($pendingCount === 0) {
+                // All steps at current order are done, move to next step or complete flow
+                $maxStepOrder = $this->repository->database
+                    ->prepare("SELECT MAX(step_order) as max_order FROM approval_step WHERE flow_id = :flow_id")
+                    ->execute(['flow_id' => $flowId])
+                    ->fetchOne();
+
+                if ($flow['current_step'] >= ($maxStepOrder['max_order'] ?? 0)) {
+                    $this->repository->update([
+                        'status' => ApprovalStatusEnum::APPROVED->value,
+                    ], ['id' => $flowId]);
+
+                    $this->executeCallback($flow);
+                } else {
+                    // Find the next available step order
+                    $nextStepOrder = $this->repository->database
+                        ->prepare("SELECT MIN(step_order) as next_order
+                            FROM approval_step
+                            WHERE flow_id = :flow_id
+                            AND step_order > :current_order")
+                        ->execute([
+                            'flow_id' => $flowId,
+                            'current_order' => $flow['current_step']
+                        ])
+                        ->fetchOne();
+
+                    $this->repository->update([
+                        'current_step' => (int) $nextStepOrder['next_order'],
+                    ], ['id' => $flowId]);
+                }
             }
+
+            return $this->getFlow($flowId);
+        });
+    }
+
+    /**
+     * Send back the flow to a previous step
+     */
+    public function sendBack(int $flowId, int $userId, ApprovalRequest $request): array {
+        return $this->repository->transaction(function () use ($flowId, $userId, $request): array {
+            $flow = $this->getFlow($flowId);
+
+            if ($flow['status'] !== ApprovalStatusEnum::PENDING->value) {
+                throw new SystemException('Bu onay süreci aktif değil', 400);
+            }
+
+            // Find the specific step for this user at current level
+            $userStep = $this->repository->findUserStepAtCurrentLevel($flowId, (int) $flow['current_step'], $userId);
+            if (!$userStep) {
+                throw new SystemException('Bu aşamada işlem yapma yetkiniz bulunamadı', 403);
+            }
+
+            // 1. Mark current step as sent back
+            $this->repository->update([
+                'status'     => ApprovalStatusEnum::SENT_BACK->value,
+                'decided_by' => $userId,
+                'decided_at' => [date('Y-m-d H:i:s')],
+                'comment'    => $request->comment,
+            ], ['id' => $userStep['id']], 'approval_step');
+
+            // 2. Find the previous step order
+            $prevStepOrder = $this->repository->database
+                ->prepare("SELECT MAX(step_order) as prev_order
+                    FROM approval_step
+                    WHERE flow_id = :flow_id
+                    AND step_order < :current_order")
+                ->execute([
+                    'flow_id' => $flowId,
+                    'current_order' => $flow['current_step']
+                ])
+                ->fetchOne();
+
+            if (!$prevStepOrder || $prevStepOrder['prev_order'] === null) {
+                // No previous step, maybe send back to creator?
+                // For now, let's throw an error or handle as reject
+                throw new SystemException('Geri gönderilecek bir önceki adım bulunamadı', 400);
+            }
+
+            $targetOrder = (int) $prevStepOrder['prev_order'];
+
+            // 3. Reset all steps at the previous order to pending
+            $this->repository->update([
+                'status'     => ApprovalStatusEnum::PENDING->value,
+                'decided_by' => null,
+                'decided_at' => null,
+            ], [
+                'flow_id'    => $flowId,
+                'step_order' => $targetOrder
+            ], 'approval_step');
+
+            // 4. Update flow's current_step back
+            $this->repository->update([
+                'current_step' => $targetOrder,
+            ], ['id' => $flowId]);
 
             return $this->getFlow($flowId);
         });
