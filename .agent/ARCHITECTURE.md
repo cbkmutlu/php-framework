@@ -1,4 +1,4 @@
-# Project Architecture
+# Architecture Guidelines
 
 > **Purpose:** This document outlines the fundamental design decisions, system components, and data flow of the application. It serves as the primary reference for understanding "how the system works".
 
