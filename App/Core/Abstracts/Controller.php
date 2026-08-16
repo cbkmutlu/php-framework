@@ -5,16 +5,11 @@ declare(strict_types=1);
 namespace App\Core\Abstracts;
 
 use System\Http\{Request, Response};
-use System\View\View;
 
 abstract class Controller {
     protected Request $request;
     protected Response $response;
-    protected View $view;
 
-    /**
-     * Get request parameters
-     */
     final protected function params(?string $param = null): array|int|string {
         $result = [
             'language_id' => filter_var($this->request->get('lang'), FILTER_VALIDATE_INT) ?: 1,
@@ -22,27 +17,5 @@ abstract class Controller {
         ];
 
         return $result[$param] ?? $result;
-    }
-
-    /**
-     * Set theme
-     */
-    final protected function theme(string $theme): self {
-        $this->view->theme($theme);
-        return $this;
-    }
-
-    /**
-     * Import view
-     */
-    final protected function import(string $view, array $data = []): void {
-        $this->view->import($view, $data);
-    }
-
-    /**
-     * Render view
-     */
-    final protected function view(string $view, array $data = [], int $code = 200): void {
-        $this->response->body($this->view->render($view, $data), $code);
     }
 }

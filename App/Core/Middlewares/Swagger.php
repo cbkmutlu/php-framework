@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Core\Middlewares;
 
 class Swagger {
-    private $users;
+    private array $users;
 
     public function __construct() {
         $this->users = import_config('defines.app.swagger');
